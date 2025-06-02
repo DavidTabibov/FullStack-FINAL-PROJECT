@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login System</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 10px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        #result { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .success { background-color: #d4edda !important; border-color: #c3e6cb !important; }
+        .error { background-color: #f8d7da !important; border-color: #f5c6cb !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Authentication System Test</h1>
+        <p>Test the registration and login functionality of the fashion store backend.</p>
+        
+        <div>
+            <button onclick="testRegistration()">📝 Test Registration (New User)</button>
+            <button onclick="testExistingLogin()">🔑 Test Login (Existing Admin)</button>
+            <button onclick="testNewUserLogin()">👤 Test Login (New User)</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        async function testRegistration() {
+            const timestamp = Date.now();
+            const email = `testuser${timestamp}@example.com`;
+            
+            showResult('Testing registration...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        firstName: 'Test',
+                        lastName: 'User',
+                        email: email,
+                        password: 'TestPass1234!' // Meets requirements: uppercase, lowercase, 4 digits, special char
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    currentUser = { email: email, password: 'TestPass1234!' };
+                    showResult(`✅ Registration Successful!\n\nUser created: ${email}\nPassword: TestPass1234!\nToken received: ${data.data.token ? 'Yes' : 'No'}\n\n` + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult(`❌ Registration Failed:\n\n` + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testExistingLogin() {
+            showResult('Testing login with existing admin user...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'AdminPass1234!'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    showResult(`✅ Login Successful!\n\nUser: admin@example.com\nRole: ${data.data.user.role}\nToken received: ${data.data.token ? 'Yes' : 'No'}\n\n` + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult(`❌ Login Failed:\n\n` + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testNewUserLogin() {
+            if (!currentUser) {
+                showResult('❌ Please register a new user first!', 'error');
+                return;
+            }
+            
+            showResult(`Testing login with newly registered user: ${currentUser.email}...`, 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: currentUser.email,
+                        password: currentUser.password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    showResult(`✅ Login Successful!\n\nUser: ${currentUser.email}\nRole: ${data.data.user.role}\nToken received: ${data.data.token ? 'Yes' : 'No'}\n\n` + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult(`❌ Login Failed:\n\n` + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<pre>' + message + '</pre>';
+            resultDiv.className = type;
+        }
+    </script>
+</body>
+</html> 
+</html> 

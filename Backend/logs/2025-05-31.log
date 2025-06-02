@@ -1,0 +1,3 @@
+[2025-05-31T22:52:17.478Z] GET /api/products 200 75.883 ms User: guest
+[2025-05-31T22:58:27.158Z] GET / 404 7.415 ms User: guest
+[2025-05-31T23:00:21.375Z] GET / 404 1.303 ms User: guest

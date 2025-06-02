@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.jsx" as="script" />
+    <link rel="preload" href="/src/styles/global.css" as="style" />
+    
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//images.unsplash.com" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Bootstrap Icons - Non-blocking load -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" /></noscript>
+    
+    <!-- SEO Meta Tags -->
+    <title>Luxe Fashion Boutique - Premium Fashion for Modern Lifestyle</title>
+    <meta name="description" content="Discover premium fashion and timeless elegance at Luxe Fashion Boutique. Shop our curated collection of men's, women's, and kids' clothing with fast shipping and easy returns." />
+    <meta name="keywords" content="fashion, luxury clothing, men's fashion, women's fashion, kids fashion, designer clothing, premium quality, online shopping" />
+    <meta name="author" content="Luxe Fashion Boutique" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Luxe Fashion Boutique - Premium Fashion for Modern Lifestyle" />
+    <meta property="og:description" content="Discover premium fashion and timeless elegance at Luxe Fashion Boutique. Shop our curated collection with fast shipping and easy returns." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://luxefashionboutique.com" />
+    <meta property="og:image" content="https://luxefashionboutique.com/og-image.jpg" />
+    <meta property="og:site_name" content="Luxe Fashion Boutique" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Luxe Fashion Boutique - Premium Fashion for Modern Lifestyle" />
+    <meta name="twitter:description" content="Discover premium fashion and timeless elegance. Shop our curated collection with fast shipping and easy returns." />
+    <meta name="twitter:image" content="https://luxefashionboutique.com/twitter-image.jpg" />
+    <meta name="twitter:site" content="@luxefashionboutique" />
+    
+    <!-- Additional SEO Tags -->
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://luxefashionboutique.com" />
+    
+    <!-- Performance hints -->
+    <meta http-equiv="x-dns-prefetch-control" content="on" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ClothingStore",
+      "name": "Luxe Fashion Boutique",
+      "description": "Premium fashion and timeless elegance for the modern lifestyle",
+      "url": "https://luxefashionboutique.com",
+      "logo": "https://luxefashionboutique.com/logo.png",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "123 Fashion Avenue",
+        "addressLocality": "New York",
+        "addressRegion": "NY",
+        "postalCode": "10001",
+        "addressCountry": "US"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-555-123-4567",
+        "contactType": "customer service",
+        "email": "info@luxefashionboutique.com"
+      },
+      "sameAs": [
+        "https://twitter.com/luxefashionboutique",
+        "https://facebook.com/luxefashionboutique",
+        "https://instagram.com/luxefashionboutique"
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

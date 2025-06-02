@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .response {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .profile-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Login Test</h1>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="admin@luxefashionboutique.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" value="Admin123!" required>
+            </div>
+            
+            <button type="submit">Login</button>
+            <button type="button" onclick="testProfile()">Test Profile</button>
+            <button type="button" onclick="openFrontend()">Open Frontend</button>
+        </form>
+        
+        <div id="result"></div>
+        
+        <div class="profile-section" id="profileSection" style="display: none;">
+            <h3>👤 Profile Information</h3>
+            <div id="profileResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<div style="color: blue;">🔄 Logging in...</div>';
+                
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Login successful!</div>
+                        <div class="response">Response: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Login failed!</div>
+                        <div class="response">Error: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Request failed!</div>
+                    <div class="response">Error: ${error.message}</div>
+                `;
+            }
+        });
+        
+        async function testProfile() {
+            const profileDiv = document.getElementById('profileResult');
+            const profileSection = document.getElementById('profileSection');
+            
+            if (!currentToken) {
+                alert('Please login first!');
+                return;
+            }
+            
+            try {
+                profileSection.style.display = 'block';
+                profileDiv.innerHTML = '<div style="color: blue;">🔄 Loading profile...</div>';
+                
+                const response = await fetch('http://localhost:5000/api/users/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    profileDiv.innerHTML = `
+                        <div class="success">✅ Profile loaded successfully!</div>
+                        <div class="response">Profile: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    profileDiv.innerHTML = `
+                        <div class="error">❌ Profile load failed!</div>
+                        <div class="response">Error: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                profileDiv.innerHTML = `
+                    <div class="error">❌ Request failed!</div>
+                    <div class="response">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function openFrontend() {
+            window.open('http://localhost:5173', '_blank');
+        }
+        
+        // Auto-login on page load for testing
+        window.addEventListener('load', () => {
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+        });
+    </script>
+</body>
+</html> 
