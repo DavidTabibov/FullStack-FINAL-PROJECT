@@ -1,0 +1,130 @@
+.product-skeleton {
+    background: var(--bs-light);
+}
+
+.skeleton-image {
+    position: relative;
+    padding-top: 133.33%; /* יחס גובה-רוחב של 4:3 */
+    background: var(--bs-gray-200);
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.skeleton-badge {
+    width: 60px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--bs-gray-200);
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-brand {
+    width: 80px;
+    height: 16px;
+    background: var(--bs-gray-200);
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-title {
+    width: 100%;
+    height: 24px;
+    background: var(--bs-gray-200);
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-category {
+    width: 70px;
+    height: 16px;
+    background: var(--bs-gray-200);
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-price {
+    width: 90px;
+    height: 24px;
+    background: var(--bs-gray-200);
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-color: var(--bs-gray-200);
+    }
+    50% {
+        background-color: var(--bs-gray-300);
+    }
+    100% {
+        background-color: var(--bs-gray-200);
+    }
+}
+
+/* תצוגת רשימה */
+.list-view.product-skeleton {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.list-view .skeleton-image {
+    flex: 0 0 200px;
+    padding-top: 0;
+    height: 266px;
+}
+
+.list-view .card-body {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* מדיה קוורי למסכים קטנים */
+@media (max-width: 768px) {
+    .list-view.product-skeleton {
+        flex-direction: column;
+    }
+
+    .list-view .skeleton-image {
+        flex: 0 0 auto;
+        width: 100%;
+        padding-top: 133.33%;
+    }
+
+    .list-view .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    .product-skeleton {
+        background: #2b2b2b;
+    }
+
+    .skeleton-image,
+    .skeleton-badge,
+    .skeleton-brand,
+    .skeleton-title,
+    .skeleton-category,
+    .skeleton-price {
+        background: #363636;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-color: #363636;
+        }
+        50% {
+            background-color: #404040;
+        }
+        100% {
+            background-color: #363636;
+        }
+    }
+}

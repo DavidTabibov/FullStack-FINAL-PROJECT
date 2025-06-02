@@ -1,0 +1,146 @@
+/* AboutPage.css - Bootstrap Compatible */
+
+/* Hero */
+.about-hero {
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+    padding: 6rem 0;
+}
+
+.text-inverse {
+    color: var(--bs-light) !important;
+}
+
+/* General section styling */
+.about-section {
+    padding: 4rem 0;
+}
+
+.about-section.bg-light {
+    background-color: var(--bs-light);
+}
+
+/* Section titles */
+.section-title {
+    position: relative;
+    display: inline-block;
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: var(--bs-dark);
+    padding-bottom: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--bs-primary);
+    border-radius: 2px;
+}
+
+/* Feature cards - use Bootstrap cards instead */
+.feature-card {
+    border: none;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 0.75rem;
+}
+
+.feature-card:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+}
+
+.icon-circle {
+    font-size: 2.5rem;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Bootstrap compatible spacing utilities */
+.mb-custom {
+    margin-bottom: 2rem;
+}
+
+.mt-custom {
+    margin-top: 2rem;
+}
+
+.py-custom {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+/* Role cards - use Bootstrap border utilities */
+.role-card {
+    border-left: 4px solid var(--bs-primary) !important;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05);
+}
+
+.role-list {
+    list-style: disc inside;
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.role-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Privacy card */
+.privacy-card {
+    border: none;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 0.75rem;
+}
+
+.privacy-card:hover {
+    transform: translateY(-0.375rem);
+    box-shadow: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.1);
+}
+
+.privacy-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.privacy-list li {
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.privacy-list li::before {
+    content: '✔';
+    position: absolute;
+    left: 0;
+    color: var(--bs-primary);
+}
+
+/* Remove custom utilities that conflict with Bootstrap */
+.mb-0 {
+    margin-bottom: 0 !important;
+}
+
+.mt-4 {
+    margin-top: 1.5rem !important;
+}
+
+/* Use Bootstrap gap utilities instead */
+.gx-4 {
+    column-gap: 1.5rem !important;
+}
+
+.gy-4 {
+    row-gap: 1.5rem !important;
+}

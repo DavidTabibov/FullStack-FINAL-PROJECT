@@ -1,0 +1,130 @@
+/* Toast Container */
+.toast-container {
+  max-width: 350px;
+  width: 100%;
+}
+
+/* Toast Base Styles */
+.toast {
+  backdrop-filter: blur(10px);
+  border-radius: 12px !important;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(100%);
+  animation: slideInRight 0.3s ease-out forwards;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Toast Animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* Toast Types */
+.toast-success {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border-left: 4px solid #34d399 !important;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  border-left: 4px solid #f87171 !important;
+}
+
+.toast-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  border-left: 4px solid #fbbf24 !important;
+}
+
+.toast-info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border-left: 4px solid #60a5fa !important;
+}
+
+/* Toast Header */
+.toast-header {
+  padding: 0.75rem 1rem 0.25rem 1rem !important;
+}
+
+/* Toast Body */
+.toast-body {
+  padding: 0.25rem 1rem 0.75rem 1rem !important;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Close Button */
+.btn-close-white {
+  filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.btn-close-white:hover {
+  opacity: 1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+  .toast-container {
+    left: 1rem !important;
+    right: 1rem !important;
+    max-width: none;
+  }
+  
+  .toast {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .toast-body {
+    font-size: 0.85rem;
+  }
+}
+
+/* Toast Hover Effect */
+.toast:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Progress Bar (Optional) */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  animation: progress 5s linear forwards;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+} 
