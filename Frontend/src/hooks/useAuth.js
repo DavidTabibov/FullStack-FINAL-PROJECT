@@ -2,187 +2,186 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import authService from '../services/auth';
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
+
+const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
+    const [lastActivity, setLastActivity] = useState(Date.now());
+
+    // Auto-logout after 4 hours of inactivity
+    const AUTO_LOGOUT_TIME = 4 * 60 * 60 * 1000; // 4 hours
+    const WARNING_TIME = 15 * 60 * 1000; // 15 minutes before logout
 
     useEffect(() => {
-        const initializeAuth = async () => {
-            try {
-                // בדיקה אם יש משתמש מחובר
-                const storedUser = localStorage.getItem('user');
-                if (storedUser) {
-                    try {
-                        const parsedUser = JSON.parse(storedUser);
-                        setUser(parsedUser);
-                        setIsAuthenticated(true);
-                        setIsAdmin(parsedUser.role === 'admin');
+        // Remove automatic token validation to prevent unnecessary logouts
+        // We'll handle validation only when needed
+        if (token) {
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            setUser(userData);
+        }
+        setLoading(false);
+    }, [token]);
 
-                        // בדיקת תוקף הטוקן מול השרת (אופציונלי)
-                        try {
-                            const isValid = await authService.checkTokenValidity();
-                            if (!isValid) {
-                                await logout();
-                            }
-                        } catch (error) {
-                            console.log('Token validation failed, logging out');
-                            await logout();
-                        }
-                    } catch (error) {
-                        localStorage.removeItem('user');
-                        localStorage.removeItem('token');
-                    }
+    // Track user activity for auto-logout
+    useEffect(() => {
+        const updateActivity = () => {
+            setLastActivity(Date.now());
+        };
+
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+        
+        // Add event listeners for user activity
+        events.forEach(event => {
+            document.addEventListener(event, updateActivity, true);
+        });
+
+        return () => {
+            events.forEach(event => {
+                document.removeEventListener(event, updateActivity, true);
+            });
+        };
+    }, []);
+
+    // Auto-logout timer
+    useEffect(() => {
+        if (!user || !token) return;
+
+        const checkActivity = () => {
+            const now = Date.now();
+            const timeSinceLastActivity = now - lastActivity;
+            
+            if (timeSinceLastActivity >= AUTO_LOGOUT_TIME) {
+                // Auto logout
+                logout();
+                alert('הופסקה פעילותך במערכת עקב חוסר פעילות למשך 4 שעות. אנא התחבר מחדש.');
+            } else if (timeSinceLastActivity >= AUTO_LOGOUT_TIME - WARNING_TIME) {
+                // Show warning 15 minutes before logout
+                const minutesLeft = Math.ceil((AUTO_LOGOUT_TIME - timeSinceLastActivity) / (60 * 1000));
+                const shouldContinue = confirm(`תופסק פעילותך במערכת בעוד ${minutesLeft} דקות עקב חוסר פעילות. האם ברצונך להמשיך?`);
+                
+                if (shouldContinue) {
+                    setLastActivity(Date.now()); // Reset activity timer
                 }
-            } catch (error) {
-                console.error('Error initializing auth:', error);
-            } finally {
-                setLoading(false);
             }
         };
 
-        initializeAuth();
-    }, []);
+        const interval = setInterval(checkActivity, 60000); // Check every minute
 
-    const login = async (credentials) => {
-        try {
-            const response = await authService.login(credentials);
-            const { data } = response;
+        return () => clearInterval(interval);
+    }, [user, token, lastActivity]);
 
-            // Fix: Access nested data structure - API returns data.data.user and data.data.token
-            if (!data || !data.data || !data.data.user || !data.data.token) {
-                throw new Error('נתונים לא תקינים מהשרת');
-            }
-
-            // Format user data to match frontend expectations
-            const formattedUser = {
-                id: data.data.user.id,
-                name: {
-                    first: data.data.user.firstName,
-                    last: data.data.user.lastName
-                },
-                email: data.data.user.email,
-                role: data.data.user.role,
-                isAdmin: data.data.user.role === 'admin'
-            };
-
-            localStorage.setItem('user', JSON.stringify(formattedUser));
-            localStorage.setItem('token', data.data.token);
-            localStorage.setItem('lastActivity', Date.now().toString());
-
-            setUser(formattedUser);
-            setIsAuthenticated(true);
-            setIsAdmin(formattedUser.isAdmin);
-
-            console.log(`ברוך הבא, ${formattedUser.name.first || 'משתמש'}!`);
-            return true;
-        } catch (error) {
-            console.error("התחברות נכשלה, בדוק את הפרטים ונסה שוב.");
-            throw error;
-        }
-    };
-
-    const register = async (userData) => {
-        try {
-            // התאמת מבנה הנתונים למה שהשרת מצפה
-            const formattedData = {
-                firstName: userData.firstName || userData.name?.first || '',
-                lastName: userData.lastName || userData.name?.last || '',
-                email: userData.email,
-                password: userData.password
-            };
-
-            const response = await authService.register(formattedData);
-            const { data } = response;
-
-            // Fix: Access nested data structure - API returns data.data.user and data.data.token
-            if (!data || !data.data || !data.data.user) {
-                throw new Error('נתונים לא תקינים מהשרת');
-            }
-
-            // Format user data to match frontend expectations
-            const formattedUser = {
-                id: data.data.user.id,
-                name: {
-                    first: data.data.user.firstName,
-                    last: data.data.user.lastName
-                },
-                email: data.data.user.email,
-                role: data.data.user.role,
-                isAdmin: data.data.user.role === 'admin'
-            };
-
-            // התחברות אוטומטית אם יש טוקן
-            if (data.data.token) {
-                localStorage.setItem('user', JSON.stringify(formattedUser));
-                localStorage.setItem('token', data.data.token);
-                localStorage.setItem('lastActivity', Date.now().toString());
-
-                setUser(formattedUser);
-                setIsAuthenticated(true);
-                setIsAdmin(formattedUser.isAdmin);
-            }
-
-            console.log(`נרשמת בהצלחה, ${formattedUser.name.first}!`);
-            return true;
-        } catch (error) {
-            console.error("הרשמה נכשלה, בדוק את הפרטים ונסה שוב.");
-            throw error;
-        }
-    };
-
-    const logout = async () => {
-        try {
-            await authService.logout();
-        } catch (error) {
-            console.error('Error during logout:', error);
-        } finally {
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            localStorage.removeItem('lastActivity');
-            setUser(null);
-            setIsAuthenticated(false);
-            setIsAdmin(false);
-            console.log("התנתקת בהצלחה!");
-        }
-    };
-
-    // עדכון נתוני משתמש
-    const updateUser = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-    };
-
-    // עדכון פרופיל משתמש
-    const updateProfile = async (profileData) => {
+    const login = async (email, password) => {
         try {
             setLoading(true);
-            const response = await authService.updateProfile(profileData);
-            const updatedUser = { ...user, ...response.data };
-            updateUser(updatedUser);
-            console.log('הפרופיל עודכן בהצלחה!');
-            return updatedUser;
+            const response = await authService.login({ email, password });
+            
+            // The API returns user data and token inside response.data.data
+            if (response.data && response.data.status === 'success' && response.data.data && response.data.data.token) {
+                const userData = {
+                    _id: response.data.data.user.id,
+                    firstName: response.data.data.user.firstName,
+                    lastName: response.data.data.user.lastName,
+                    fullName: `${response.data.data.user.firstName} ${response.data.data.user.lastName}`,
+                    email: response.data.data.user.email,
+                    role: response.data.data.user.role,
+                    isAdmin: response.data.data.user.role === 'admin'
+                };
+
+                setToken(response.data.data.token);
+                setUser(userData);
+                setLastActivity(Date.now());
+                localStorage.setItem('token', response.data.data.token);
+                localStorage.setItem('user', JSON.stringify(userData));
+                return { success: true, user: userData };
+            } else {
+                throw new Error('Invalid response format');
+            }
         } catch (error) {
-            console.error('שגיאה בעדכון הפרופיל');
-            throw error;
+            console.error('Login error:', error);
+            return { 
+                success: false, 
+                error: error.message || 'Login failed' 
+            };
         } finally {
             setLoading(false);
         }
     };
 
+    const register = async (userData) => {
+        try {
+            setLoading(true);
+            const response = await authService.register(userData);
+            
+            // The API returns user data and token inside response.data.data
+            if (response.data && response.data.status === 'success' && response.data.data && response.data.data.token) {
+                const formattedUser = {
+                    _id: response.data.data.user.id,
+                    firstName: response.data.data.user.firstName,
+                    lastName: response.data.data.user.lastName,
+                    fullName: `${response.data.data.user.firstName} ${response.data.data.user.lastName}`,
+                    email: response.data.data.user.email,
+                    role: response.data.data.user.role,
+                    isAdmin: response.data.data.user.role === 'admin'
+                };
+
+                setToken(response.data.data.token);
+                setUser(formattedUser);
+                setLastActivity(Date.now());
+                localStorage.setItem('token', response.data.data.token);
+                localStorage.setItem('user', JSON.stringify(formattedUser));
+                return { success: true, user: formattedUser };
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { 
+                success: false, 
+                error: error.message || 'Registration failed' 
+            };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const logout = () => {
+        setUser(null);
+        setToken(null);
+        setLastActivity(Date.now());
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+    };
+
+    const updateUser = (userData) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+    };
+
+    const isAuthenticated = !!token && !!user;
+    const isAdmin = user?.role === 'admin' || user?.isAdmin === true;
+
     const value = {
         user,
+        token,
+        loading,
         isAuthenticated,
         isAdmin,
-        loading,
+        lastActivity,
         login,
         register,
         logout,
-        updateUser,
-        updateProfile
+        updateUser
     };
 
     return (
@@ -190,12 +189,6 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     );
-}
+};
 
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}
+export { AuthProvider };

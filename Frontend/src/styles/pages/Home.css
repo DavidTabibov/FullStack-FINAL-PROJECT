@@ -408,13 +408,62 @@
 /* Card Hover Effects */
 .card-hover {
   transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 0.75rem !important;
 }
 
 .card-hover:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
-  border-color: #6366f1 !important;
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Featured Products Compact Design */
+.featured-products .card-hover {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.featured-products .card-hover .card-body {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+
+.featured-products .card-hover .card-body .mt-auto {
+  margin-top: auto !important;
+}
+
+.featured-products .card-hover:hover .card-body {
+  background: rgba(99, 102, 241, 0.02);
+}
+
+/* Compact card image styles */
+.featured-products .card-hover img {
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+.featured-products .card-hover:hover img {
+  transform: scale(1.05);
+}
+
+/* Badge positioning for compact cards */
+.featured-products .badge {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+}
+
+/* Button improvements for compact cards */
+.featured-products .btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Price styling */
+.featured-products .h5.text-primary {
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 /* Gradient Text */

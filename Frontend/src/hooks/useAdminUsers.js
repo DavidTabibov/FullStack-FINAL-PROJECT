@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useNotifications } from './useNotifications';
 
 export function useAdminUsers() {
@@ -15,7 +15,7 @@ export function useAdminUsers() {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/admin/users');
+            const response = await api.get('/admin/users');
             setUsers(response.data);
             setError(null);
         } catch (err) {
@@ -27,7 +27,7 @@ export function useAdminUsers() {
 
     const toggleUserRole = async (userId, isAdmin) => {
         try {
-            await axios.patch(`/api/admin/users/${userId}/role`, { isAdmin });
+            await api.patch(`/admin/users/${userId}/role`, { isAdmin });
             setUsers(users.map(user =>
                 user.id === userId
                     ? { ...user, isAdmin }

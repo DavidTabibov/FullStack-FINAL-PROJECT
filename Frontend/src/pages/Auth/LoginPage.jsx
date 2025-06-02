@@ -30,31 +30,19 @@ function LoginPage() {
         setError('');
 
         try {
-            const result = await login(formData);
+            const result = await login(formData.email, formData.password);
             
-            if (result) {
+            if (result.success) {
                 toast.success('Welcome back! Login successful.');
                 navigate('/');
+            } else {
+                const errorMessage = result.error || 'Login failed. Please try again.';
+                setError(errorMessage);
+                toast.error(errorMessage);
             }
         } catch (err) {
             console.error('Login error:', err);
-
-            let errorMessage = '';
-            
-            if (err.response?.data?.message) {
-                errorMessage = err.response.data.message;
-            } else if (err.response?.status === 404) {
-                errorMessage = 'User does not exist. Please register first.';
-            } else if (err.response?.status === 401) {
-                errorMessage = 'Invalid email or password. Please try again.';
-            } else if (err.response?.status >= 500) {
-                errorMessage = 'Server error. Please try again later.';
-            } else if (err.request) {
-                errorMessage = 'Unable to connect to server. Please check your connection.';
-            } else {
-                errorMessage = 'An unexpected error occurred. Please try again.';
-            }
-
+            const errorMessage = 'An unexpected error occurred. Please try again.';
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {

@@ -2,6 +2,8 @@
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/common/OptimizedImage';
 import Loading from '../components/common/Loading';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 
 const Home = () => {
@@ -9,6 +11,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [error, setError] = useState(null);
+  const { addToCart } = useCart();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,7 +53,7 @@ const Home = () => {
     },
     {
       name: "Kids' Collection",
-      image: "https://images.unsplash.com/photo-1544905759-83a7c31bab97?ixlib=rb-4.0.3&w=500&h=600&fit=crop&crop=center", 
+      image: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&w=500&h=600&fit=crop&crop=center", 
       link: "/products?category=kids",
       alt: "Happy children wearing colorful and comfortable kids' clothing",
       description: "Fun & Comfortable"
@@ -230,7 +234,7 @@ const Home = () => {
 
       {/* Featured Products Section */}
       {products.length > 0 && (
-        <section className="py-5 bg-light">
+        <section className="py-5 bg-light featured-products">
           <div className="container">
             <div className="text-center mb-5">
               <h2 className="display-4 fw-bold mb-3 gradient-text">
@@ -240,50 +244,102 @@ const Home = () => {
                 Discover our most popular items
               </p>
             </div>
-            <div className="row g-4">
+            <div className="row g-3">
               {products.map((product, index) => (
-                <div key={product._id} className="col-md-4">
+                <div key={product._id} className="col-lg-4 col-md-6">
                   <div className="card card-hover border-0 h-100 overflow-hidden">
-                    <div className="position-relative overflow-hidden" style={{height: '16rem'}}>
-                      {product.images && product.images.length > 0 ? (
-                        <OptimizedImage
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-100 h-100 object-cover"
-                          width={400}
-                          height={300}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                      ) : (
-                        <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
-                          <div className="text-center text-muted">
-                            <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                            </svg>
-                            <p className="small mt-2">No Image</p>
+                    {/* Clickable Product Image */}
+                    <Link 
+                      to={`/products/${product._id}`} 
+                      className="text-decoration-none"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="position-relative overflow-hidden" style={{height: '12rem'}}>
+                        {product.images && product.images.length > 0 ? (
+                          <OptimizedImage
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="w-100 h-100 object-cover transition-opacity opacity-100"
+                            style={{ transition: 'opacity 0.3s', objectFit: 'cover', objectPosition: 'center center' }}
+                            width={400}
+                            height={300}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        ) : (
+                          <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                            <div className="text-center text-muted">
+                              <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                              </svg>
+                              <p className="small mt-2">No Image</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="card-body p-4">
-                      <div className="mb-2">
-                        {product.category && (
-                          <span className="badge bg-primary text-white fw-semibold px-3 py-2 rounded-pill">
-                            {product.category}
-                          </span>
                         )}
+                        {/* Category Badge */}
+                        <div className="position-absolute top-0 start-0 m-2">
+                          {product.category && (
+                            <span className="badge bg-primary text-white fw-semibold px-2 py-1 rounded-pill text-uppercase small">
+                              {product.category}
+                            </span>
+                          )}
+                        </div>
+                        {/* Hover overlay for quick view */}
+                        <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-0 d-flex align-items-center justify-content-center opacity-0 transition-all" 
+                             style={{ transition: 'all 0.3s ease' }}
+                             onMouseEnter={(e) => {
+                               e.currentTarget.classList.remove('bg-opacity-0', 'opacity-0');
+                               e.currentTarget.classList.add('bg-opacity-50', 'opacity-100');
+                             }}
+                             onMouseLeave={(e) => {
+                               e.currentTarget.classList.add('bg-opacity-0', 'opacity-0');
+                               e.currentTarget.classList.remove('bg-opacity-50', 'opacity-100');
+                             }}>
+                          <span className="btn btn-light btn-sm">
+                            <i className="bi bi-eye me-1"></i>View Details
+                          </span>
+                        </div>
                       </div>
-                      <h3 className="card-title fw-bold mb-2 text-truncate">
-                        {product.name}
-                      </h3>
-                      <p className="card-text text-muted mb-3" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+                    </Link>
+                    <div className="card-body p-3">
+                      {/* Clickable Product Title */}
+                      <Link 
+                        to={`/products/${product._id}`}
+                        className="text-decoration-none"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <h5 className="card-title fw-bold mb-2 text-truncate text-dark">
+                          {product.name}
+                        </h5>
+                      </Link>
+                      <p className="card-text text-muted mb-2 small" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
                         {product.description || 'Premium quality fashion piece crafted with attention to detail.'}
                       </p>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="h4 fw-bold gradient-text mb-0">
-                          ${product.price}
+                      <div className="d-flex justify-content-between align-items-center mt-auto">
+                        <span className="h5 fw-bold text-primary mb-0">
+                          ${product.price ? product.price.toFixed(2) : '0.00'}
                         </span>
-                        <button className="btn btn-primary btn-sm">
+                        <button 
+                          className="btn btn-primary btn-sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            addToCart(product);
+                            showToast('Product added to cart!');
+                            
+                            // Button feedback
+                            const btn = e.target;
+                            const originalContent = btn.innerHTML;
+                            btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Added!';
+                            btn.classList.remove('btn-primary');
+                            btn.classList.add('btn-success');
+                            
+                            setTimeout(() => {
+                              btn.innerHTML = originalContent;
+                              btn.classList.remove('btn-success');
+                              btn.classList.add('btn-primary');
+                            }, 2000);
+                          }}
+                        >
                           Add to Cart
                         </button>
                       </div>
@@ -292,7 +348,7 @@ const Home = () => {
                 </div>
               ))}
             </div>
-            <div className="text-center mt-5">
+            <div className="text-center mt-4">
               <Link to="/products" className="btn btn-outline-primary btn-lg text-decoration-none">
                 View All Products
               </Link>

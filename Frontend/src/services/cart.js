@@ -1,19 +1,9 @@
-﻿import axios from "axios";
-
-// const API_URL = "http://localhost:5000/api";
-const API_URL = "/api";
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+﻿import api from "./api";
 
 const cartService = {
   async getCart() {
     try {
-      const response = await axios.get(`${API_URL}/cart`, {
-        headers: getAuthHeader()
-      });
+      const response = await api.get("/cart");
       return response.data;
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -24,11 +14,12 @@ const cartService = {
 
   async addItem(productId, quantity = 1, size = null, color = null) {
     try {
-      const response = await axios.post(
-        `${API_URL}/cart/items`,
-        { productId, quantity, size, color },
-        { headers: getAuthHeader() }
-      );
+      const response = await api.post("/cart/items", { 
+        productId, 
+        quantity, 
+        size, 
+        color 
+      });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to add item to cart");
@@ -37,11 +28,7 @@ const cartService = {
 
   async updateItem(itemId, quantity) {
     try {
-      const response = await axios.patch(
-        `${API_URL}/cart/items/${itemId}`,
-        { quantity },
-        { headers: getAuthHeader() }
-      );
+      const response = await api.patch(`/cart/items/${itemId}`, { quantity });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to update cart item");
@@ -50,9 +37,7 @@ const cartService = {
 
   async removeItem(itemId) {
     try {
-      const response = await axios.delete(`${API_URL}/cart/items/${itemId}`, {
-        headers: getAuthHeader()
-      });
+      const response = await api.delete(`/cart/items/${itemId}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to remove item from cart");
@@ -61,9 +46,7 @@ const cartService = {
 
   async clearCart() {
     try {
-      const response = await axios.delete(`${API_URL}/cart`, {
-        headers: getAuthHeader()
-      });
+      const response = await api.delete("/cart");
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to clear cart");

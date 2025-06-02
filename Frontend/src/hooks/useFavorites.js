@@ -1,13 +1,20 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useAuth } from './useAuth';
 import { toggleFavorite as apiToggleFavorite, getFavoriteIds } from '../services/wishlist';
 
 export const useFavorites = () => {
+    const { isAuthenticated } = useAuth();
     const [favorites, setFavorites] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Load initial favorites when the hook is initialized
+    // Load initial favorites when the hook is initialized and user is authenticated
     useEffect(() => {
         const loadFavorites = async () => {
+            if (!isAuthenticated) {
+                setFavorites([]);
+                return;
+            }
+            
             try {
                 const favoriteIds = await getFavoriteIds();
                 setFavorites(favoriteIds);
@@ -18,19 +25,18 @@ export const useFavorites = () => {
         };
 
         loadFavorites();
-    }, []);
+    }, [isAuthenticated]);
 
     const toggleFavorite = useCallback(async (productId) => {
         if (!productId) return;
         
+        if (!isAuthenticated) {
+            console.log('Please log in to manage favorites');
+            return;
+        }
+        
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.log('Please log in to manage favorites');
-                return;
-            }
-
             // Call the API to toggle favorite
             await apiToggleFavorite(productId);
 
@@ -47,7 +53,7 @@ export const useFavorites = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [favorites]);
+    }, [favorites, isAuthenticated]);
 
     return {
         favorites,

@@ -46,7 +46,7 @@ const authService = {
       if (!token) return false;
 
       const response = await api.get('/auth/verify');
-      return response.data.valid;
+      return response.data.status === 'success' && response.data.data && response.data.data.user;
     } catch (error) {
       return false;
     }

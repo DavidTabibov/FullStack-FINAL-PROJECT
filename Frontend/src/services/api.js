@@ -39,15 +39,23 @@ api.interceptors.response.use(
         
         // Handle specific error codes
         if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            // Only clear auth data if it's specifically a token validation failure
+            // Check if the error is related to token validation, not authorization
+            const isTokenError = error.response?.data?.message?.includes('token') || 
+                                error.response?.data?.message?.includes('Not authorized') ||
+                                error.config?.url?.includes('/auth/verify');
             
-            // If user is not on login page, redirect them there
-            if (!window.location.pathname.includes('/login')) {
-                console.error('Your session has expired. Please log in again.');
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 2000);
+            if (isTokenError) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                
+                // If user is not on login page, redirect them there
+                if (!window.location.pathname.includes('/login')) {
+                    console.error('Your session has expired. Please log in again.');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                }
             }
         }
         

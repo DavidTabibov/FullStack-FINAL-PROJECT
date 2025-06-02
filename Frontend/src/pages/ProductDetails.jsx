@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import productsService from '../services/products';
+import { submitReview } from '../services/reviews';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 import Loading from '../components/common/Loading';
 import OptimizedImage from '../components/common/OptimizedImage';
 
@@ -12,6 +14,7 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +24,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [reviewLoading, setReviewLoading] = useState(false);
   const { favorites, toggleFavorite, isLoading: favLoading } = useFavorites();
 
   useEffect(() => {
@@ -68,24 +72,48 @@ const ProductDetails = () => {
     showToast(`${product.name} added to cart!`, 'success');
   };
 
-  const handleReviewSubmit = (e) => {
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    // This would typically send to the backend
-    showToast('Review submitted! (This feature requires backend implementation)', 'info');
-    setNewReview({ rating: 5, comment: '' });
+    
+    if (!isAuthenticated) {
+      showToast('Please login to submit a review', 'warning');
+      return;
+    }
+
+    if (!newReview.comment.trim()) {
+      showToast('Please enter a review comment', 'warning');
+      return;
+    }
+
+    try {
+      setReviewLoading(true);
+      await submitReview(product._id, {
+        rating: newReview.rating,
+        comment: newReview.comment.trim()
+      });
+      
+      showToast('Review submitted successfully!', 'success');
+      setNewReview({ rating: 5, comment: '' });
+      
+      // Refresh product data to show the new review
+      await fetchProduct();
+      
+    } catch (error) {
+      showToast(error.message || 'Failed to submit review', 'error');
+    } finally {
+      setReviewLoading(false);
+    }
   };
 
   // Generate fallback images for kids products with rainbow theme
   const generateKidsImage = (name, index = 0) => {
     if (name?.toLowerCase().includes('rainbow') || name?.toLowerCase().includes('unicorn')) {
-      // Use actual rainbow/unicorn themed images for rainbow unicorn dress
-      const rainbowImages = [
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=500&fit=crop', // Colorful rainbow dress
-        'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&h=500&fit=crop', // Kids fashion colorful
-        'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=500&h=500&fit=crop', // Rainbow colors fabric
-        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&h=500&fit=crop', // Kids dress
+      // Use real rainbow unicorn dress images instead of placeholders
+      const realUnicornImages = [
+        'https://i.etsystatic.com/24491485/r/il/64cc04/2635822490/il_fullxfull.2635822490_4tex.jpg', // Etsy rainbow unicorn dress
+        'https://m.media-amazon.com/images/I/61L7T19ikPL._AC_UY1100_.jpg' // Amazon rainbow unicorn dress
       ];
-      return rainbowImages[index % rainbowImages.length];
+      return realUnicornImages[index % realUnicornImages.length];
     }
     return `https://picsum.photos/500/500?random=kids${index}`;
   };
@@ -385,42 +413,65 @@ const ProductDetails = () => {
               <div className="card border-0 bg-light">
                 <div className="card-body">
                   <h4 className="fw-bold mb-4">Write a Review</h4>
-                  <form onSubmit={handleReviewSubmit}>
-                    <div className="mb-3">
-                      <label className="form-label fw-medium">Rating:</label>
-                      <div className="d-flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => setNewReview({ ...newReview, rating: star })}
-                            className={`btn btn-link p-0 fs-4 ${
-                              star <= newReview.rating ? 'text-warning' : 'text-muted'
-                            }`}
-                          >
-                            <i className="bi bi-star-fill"></i>
-                          </button>
-                        ))}
+                  
+                  {!isAuthenticated ? (
+                    <div className="text-center py-4">
+                      <p className="text-muted mb-3">Please login to write a review</p>
+                      <button
+                        onClick={() => navigate('/login')}
+                        className="btn btn-primary"
+                      >
+                        Login to Review
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleReviewSubmit}>
+                      <div className="mb-3">
+                        <label className="form-label fw-medium">Rating:</label>
+                        <div className="d-flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setNewReview({ ...newReview, rating: star })}
+                              className={`btn btn-link p-0 fs-4 ${
+                                star <= newReview.rating ? 'text-warning' : 'text-muted'
+                              }`}
+                              disabled={reviewLoading}
+                            >
+                              <i className="bi bi-star-fill"></i>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label fw-medium">Comment:</label>
-                      <textarea
-                        value={newReview.comment}
-                        onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
-                        className="form-control"
-                        rows={4}
-                        placeholder="Share your thoughts about this product..."
-                        required
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                    >
-                      Submit Review
-                    </button>
-                  </form>
+                      <div className="mb-3">
+                        <label className="form-label fw-medium">Comment:</label>
+                        <textarea
+                          value={newReview.comment}
+                          onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                          className="form-control"
+                          rows={4}
+                          placeholder="Share your thoughts about this product..."
+                          required
+                          disabled={reviewLoading}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={reviewLoading || !newReview.comment.trim()}
+                      >
+                        {reviewLoading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Submitting...
+                          </>
+                        ) : (
+                          'Submit Review'
+                        )}
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             </div>

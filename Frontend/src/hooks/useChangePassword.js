@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 export function useChangePassword() {
     const [loading, setLoading] = useState(false);
@@ -10,7 +10,7 @@ export function useChangePassword() {
         setError(null);
 
         try {
-            await axios.post('/api/users/change-password', {
+            await api.post('/users/change-password', {
                 currentPassword,
                 newPassword
             });

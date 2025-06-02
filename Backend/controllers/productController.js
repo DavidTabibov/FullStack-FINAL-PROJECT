@@ -240,6 +240,18 @@ const searchProducts = asyncHandler(async (req, res) => {
 // @access  Private
 const createProductReview = asyncHandler(async (req, res) => {
   const { rating, comment } = req.body;
+  
+  // Validate input
+  if (!rating || !comment) {
+    res.status(400);
+    throw new Error('Rating and comment are required');
+  }
+  
+  if (rating < 1 || rating > 5) {
+    res.status(400);
+    throw new Error('Rating must be between 1 and 5');
+  }
+  
   const product = await Product.findById(req.params.id);
   
   if (!product) {
@@ -257,21 +269,49 @@ const createProductReview = asyncHandler(async (req, res) => {
     throw new Error('Product already reviewed');
   }
   
+  // Create review with proper error handling for user fields
+  let reviewerName = 'Anonymous User';
+  try {
+    if (req.user.firstName && req.user.lastName) {
+      reviewerName = `${req.user.firstName} ${req.user.lastName}`;
+    } else if (req.user.firstName) {
+      reviewerName = req.user.firstName;
+    } else if (req.user.name) {
+      reviewerName = req.user.name;
+    } else if (req.user.email) {
+      // Use first part of email as fallback
+      reviewerName = req.user.email.split('@')[0];
+    }
+  } catch (error) {
+    console.log('Error getting user name for review:', error);
+    reviewerName = 'Anonymous User';
+  }
+  
   const review = {
-    name: req.user.name.first + ' ' + req.user.name.last,
+    name: reviewerName,
     rating: Number(rating),
-    comment,
+    comment: comment.trim(),
     user: req.user._id
   };
   
   product.reviews.push(review);
   product.numReviews = product.reviews.length;
   
+  // Calculate new average rating
   product.rating = product.reviews.reduce((acc, item) => item.rating + acc, 0) / 
     product.reviews.length;
   
   await product.save();
-  res.status(201).json({ message: 'Review added' });
+  
+  res.status(201).json({ 
+    message: 'Review added successfully',
+    review: {
+      name: review.name,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: new Date()
+    }
+  });
 });
 
 export {

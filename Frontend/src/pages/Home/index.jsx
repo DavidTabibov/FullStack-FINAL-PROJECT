@@ -129,7 +129,7 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-5 bg-light">
+      <section className="py-5 bg-light featured-products">
         <div className="container">
           <div className="text-center mb-5">
             <h2 className="display-4 fw-bold mb-3 text-primary">Featured Products</h2>
@@ -142,22 +142,29 @@ const Home = () => {
               <p className="mb-0">{error}</p>
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="row g-4 mb-5">
+            <div className="row g-3 mb-4">
               {featuredProducts.map((product) => (
                 <div key={product._id} className="col-lg-3 col-md-6">
-                  <div className="card border-0 h-100 shadow-sm">
+                  <div className="card border-0 h-100 shadow-sm card-hover overflow-hidden">
                     {/* Product Image */}
-                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
+                    <div className="position-relative overflow-hidden" style={{ height: '180px' }}>
                       <img 
                         src={product.images && product.images[0] 
                           ? product.images[0] 
                           : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop&crop=center'
                         } 
                         alt={product.name || 'Product'} 
-                        className="w-100 h-100 object-fit-cover"
+                        className="w-100 h-100 object-fit-cover transition-opacity opacity-100"
+                        style={{ transition: 'opacity 0.3s', objectFit: 'cover', objectPosition: 'center center' }}
                         loading="lazy"
                       />
-                      {/* Hover Overlay */}
+                      {/* Category Badge */}
+                      <div className="position-absolute top-0 start-0 m-2">
+                        <span className="badge bg-primary text-white fw-semibold px-2 py-1 rounded-pill text-uppercase small">
+                          {product.category || 'Product'}
+                        </span>
+                      </div>
+                      {/* Quick View on Hover */}
                       <div 
                         className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-0 d-flex align-items-center justify-content-center opacity-0" 
                         style={{ transition: 'all 0.3s ease' }} 
@@ -174,60 +181,17 @@ const Home = () => {
                           <i className="bi bi-eye me-1"></i>Quick View
                         </Link>
                       </div>
-                      {/* Category Badge */}
-                      <div className="position-absolute top-0 start-0 m-3">
-                        <span className="badge bg-primary text-uppercase">
-                          {product.category || 'Product'}
-                        </span>
-                      </div>
-                      {/* Favorite Button */}
-                      <div className="position-absolute top-0 end-0 m-3">
-                        <button 
-                          className="btn btn-light btn-sm rounded-circle p-2" 
-                          style={{ width: '40px', height: '40px' }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const icon = e.target.querySelector('i') || e.target;
-                            if (icon.classList.contains('bi-heart')) {
-                              icon.className = 'bi bi-heart-fill text-danger';
-                            } else if (icon.classList.contains('bi-heart-fill')) {
-                              icon.className = 'bi bi-heart';
-                            }
-                          }}
-                        >
-                          <i className="bi bi-heart"></i>
-                        </button>
-                      </div>
                     </div>
 
                     {/* Card Body */}
-                    <div className="card-body p-4">
-                      {/* Rating */}
-                      {product.rating && product.rating > 0 && (
-                        <div className="mb-2">
-                          <div className="d-flex align-items-center">
-                            <div className="text-warning me-2">
-                              {[...Array(5)].map((_, i) => (
-                                <i 
-                                  key={i} 
-                                  className={`bi ${i < Math.floor(product.rating) ? 'bi-star-fill' : 'bi-star'}`}
-                                ></i>
-                              ))}
-                            </div>
-                            {product.reviewCount && (
-                              <small className="text-muted">({product.reviewCount} reviews)</small>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
+                    <div className="card-body p-3">
                       {/* Product Title */}
-                      <h5 className="card-title fw-bold mb-2">{product.name}</h5>
+                      <h5 className="card-title fw-bold mb-2 text-truncate">{product.name}</h5>
                       
                       {/* Product Description */}
                       {product.description && (
                         <p 
-                          className="card-text text-muted mb-3 small" 
+                          className="card-text text-muted mb-2 small" 
                           style={{ 
                             display: '-webkit-box', 
                             WebkitLineClamp: 2, 
@@ -265,7 +229,7 @@ const Home = () => {
                             }, 2000);
                           }}
                         >
-                          <i className="bi bi-bag-plus me-1"></i>Add to Cart
+                          Add to Cart
                         </button>
                       </div>
                     </div>
@@ -361,5 +325,6 @@ const Home = () => {
   );
 };
 
-export default Home; / *   t r i g g e r   r e b u i l d   * /  
+export default Home; / *   t r i g g e r   r e b u i l d   * / 
+ 
  

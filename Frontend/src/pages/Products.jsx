@@ -4,6 +4,7 @@ import ProductCard from '../components/products/ProductCard';
 import Loading from '../components/common/Loading';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
 import { toggleFavorite, getFavoriteIds } from '../services/wishlist';
 
@@ -18,6 +19,7 @@ const Products = () => {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const { showToast } = useToast();
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
 
   const categories = [
@@ -65,6 +67,12 @@ const Products = () => {
     };
 
     const fetchFavorites = async () => {
+      // Only fetch favorites if user is authenticated
+      if (!isAuthenticated) {
+        setFavoriteIds([]);
+        return;
+      }
+      
       try {
         const ids = await getFavoriteIds();
         setFavoriteIds(ids);
@@ -77,7 +85,7 @@ const Products = () => {
 
     fetchProducts();
     fetchFavorites();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     let filtered = [...products];
@@ -132,6 +140,11 @@ const Products = () => {
   };
 
   const handleToggleFavorite = async (productId) => {
+    if (!isAuthenticated) {
+      showToast('Please login to manage favorites', 'error');
+      return;
+    }
+    
     try {
       await toggleFavorite(productId);
       
@@ -147,7 +160,7 @@ const Products = () => {
       });
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      showToast('Please login to manage favorites', 'error');
+      showToast('Error updating favorites. Please try again.', 'error');
     }
   };
 

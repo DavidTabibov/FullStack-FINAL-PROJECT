@@ -1,41 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([]);
+  const { cartItems, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    loadCartItems();
-  }, []);
-
-  const loadCartItems = () => {
-    const items = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCartItems(items);
-  };
-
-  const updateQuantity = (index, newQuantity) => {
-    if (newQuantity < 1) return;
-    
-    const updatedItems = [...cartItems];
-    updatedItems[index].quantity = newQuantity;
-    setCartItems(updatedItems);
-    localStorage.setItem('cart', JSON.stringify(updatedItems));
-  };
-
-  const removeItem = (index) => {
-    const updatedItems = cartItems.filter((_, i) => i !== index);
-    setCartItems(updatedItems);
-    localStorage.setItem('cart', JSON.stringify(updatedItems));
-  };
-
-  const clearCart = () => {
-    if (window.confirm('Are you sure you want to clear your cart?')) {
-      setCartItems([]);
-      localStorage.removeItem('cart');
-    }
-  };
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -49,6 +21,32 @@ const Cart = () => {
     const subtotal = calculateSubtotal();
     const tax = calculateTax(subtotal);
     return subtotal + tax;
+  };
+
+  const handleRemoveItem = (productId) => {
+    removeFromCart(productId);
+  };
+
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    updateQuantity(productId, newQuantity);
+  };
+
+  const handleClearCart = () => {
+    clearCart();
+    showToast('Cart cleared successfully!', 'success');
+  };
+
+  const getProductImage = (item) => {
+    // Check for images array first (for products)
+    if (item.images && item.images.length > 0) {
+      return item.images[0];
+    }
+    // Check for single image field
+    if (item.image) {
+      return item.image;
+    }
+    // Fallback to placeholder
+    return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=80&h=80&fit=crop&crop=center';
   };
 
   const handleCheckout = () => {
@@ -85,7 +83,7 @@ const Cart = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h2 fw-bold">Shopping Cart</h1>
         <button
-          onClick={clearCart}
+          onClick={handleClearCart}
           className="btn btn-outline-danger"
         >
           Clear Cart
@@ -102,24 +100,36 @@ const Cart = () => {
             
             <div className="card-body p-0">
               {cartItems.map((item, index) => (
-                <div key={index} className="d-flex align-items-center p-4 border-bottom">
+                <div key={item._id || index} className="d-flex align-items-start p-4 border-bottom">
                   {/* Product Image */}
                   <div className="flex-shrink-0 me-3">
-                    <img
-                      src={item.image || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=80&h=80&fit=crop&crop=center'}
-                      alt={item.name}
-                      className="rounded"
-                      style={{ width: '80px', height: '80px', objectFit: 'cover' }}
-                    />
+                    <button
+                      onClick={() => navigate(`/products/${item._id}`)}
+                      className="btn p-0 border-0 bg-transparent"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img
+                        src={getProductImage(item)}
+                        alt={item.name}
+                        className="rounded"
+                        style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                      />
+                    </button>
                   </div>
 
                   {/* Product Info */}
                   <div className="flex-grow-1 me-3">
-                    <h3 className="h6 fw-semibold mb-1 text-truncate">{item.name}</h3>
+                    <button
+                      onClick={() => navigate(`/products/${item._id}`)}
+                      className="btn p-0 border-0 bg-transparent text-start w-100"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <h3 className="h6 fw-semibold mb-1 text-truncate text-dark">{item.name}</h3>
+                    </button>
                     <div className="small text-muted mb-1">
-                      {item.size && <span>Size: {item.size}</span>}
-                      {item.size && item.color && <span className="mx-2">•</span>}
-                      {item.color && <span>Color: {item.color}</span>}
+                      {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                      {item.selectedSize && item.selectedColor && <span className="mx-2">•</span>}
+                      {item.selectedColor && <span>Color: {item.selectedColor}</span>}
                     </div>
                     <p className="h6 fw-bold text-primary mb-0">${item.price}</p>
                   </div>
@@ -127,7 +137,7 @@ const Cart = () => {
                   {/* Quantity Controls */}
                   <div className="d-flex align-items-center me-3">
                     <button
-                      onClick={() => updateQuantity(index, item.quantity - 1)}
+                      onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}
                       className="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center"
                       style={{ width: '32px', height: '32px' }}
                     >
@@ -137,7 +147,7 @@ const Cart = () => {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQuantity(index, item.quantity + 1)}
+                      onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}
                       className="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center"
                       style={{ width: '32px', height: '32px' }}
                     >
@@ -152,7 +162,7 @@ const Cart = () => {
 
                   {/* Remove Button */}
                   <button
-                    onClick={() => removeItem(index)}
+                    onClick={() => handleRemoveItem(item._id)}
                     className="btn btn-outline-danger btn-sm"
                     title="Remove item"
                   >

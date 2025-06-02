@@ -13,7 +13,9 @@ const authUser = asyncHandler(async (req, res) => {
   if (user && (await user.matchPassword(password))) {
     res.json({
       _id: user._id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: user.fullName,
       email: user.email,
       role: user.role,
       token: generateToken(user._id),
@@ -28,7 +30,7 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -38,7 +40,8 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    name,
+    firstName,
+    lastName,
     email,
     password,
   });
@@ -46,7 +49,9 @@ const registerUser = asyncHandler(async (req, res) => {
   if (user) {
     res.status(201).json({
       _id: user._id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: user.fullName,
       email: user.email,
       role: user.role,
       token: generateToken(user._id),
@@ -88,8 +93,10 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    user.name = req.body.name || user.name;
+    user.firstName = req.body.firstName || user.firstName;
+    user.lastName = req.body.lastName || user.lastName;
     user.email = req.body.email || user.email;
+    user.phone = req.body.phone || user.phone;
     
     if (req.body.password) {
       user.password = req.body.password;
@@ -99,8 +106,11 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
     res.json({
       _id: updatedUser._id,
-      name: updatedUser.name,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      fullName: updatedUser.fullName,
       email: updatedUser.email,
+      phone: updatedUser.phone,
       role: updatedUser.role,
       token: generateToken(updatedUser._id),
     });
@@ -154,7 +164,8 @@ const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
   if (user) {
-    user.name = req.body.name || user.name;
+    user.firstName = req.body.firstName || user.firstName;
+    user.lastName = req.body.lastName || user.lastName;
     user.email = req.body.email || user.email;
     user.role = req.body.role || user.role;
 
@@ -162,7 +173,9 @@ const updateUser = asyncHandler(async (req, res) => {
 
     res.json({
       _id: updatedUser._id,
-      name: updatedUser.name,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      fullName: updatedUser.fullName,
       email: updatedUser.email,
       role: updatedUser.role,
     });
@@ -299,7 +312,39 @@ const getFavorites = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    res.json(user.wishlist);
+    res.json({
+      favorites: user.wishlist
+    });
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
+// @desc    Toggle product in favorites (add/remove)
+// @route   POST /api/users/favorites/:id
+// @access  Private
+const toggleFavorites = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const productId = req.params.id;
+
+  if (user) {
+    // Check if product is already in favorites
+    const isInFavorites = user.wishlist.includes(productId);
+    
+    if (isInFavorites) {
+      // Remove from favorites
+      user.wishlist = user.wishlist.filter(
+        fav => fav.toString() !== productId
+      );
+      await user.save();
+      res.json({ message: 'Product removed from favorites', action: 'removed' });
+    } else {
+      // Add to favorites
+      user.wishlist.push(productId);
+      await user.save();
+      res.json({ message: 'Product added to favorites', action: 'added' });
+    }
   } else {
     res.status(404);
     throw new Error('User not found');
@@ -350,6 +395,42 @@ const removeFromFavorites = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get favorites analytics for admin
+// @route   GET /api/users/admin/favorites-analytics
+// @access  Private/Admin
+const getFavoritesAnalytics = asyncHandler(async (req, res) => {
+  const favoritesStats = await User.aggregate([
+    { $unwind: '$wishlist' },
+    { $group: { _id: '$wishlist', count: { $sum: 1 } } },
+    { $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'product' } },
+    { $unwind: '$product' },
+    { $project: { productId: '$_id', count: 1, name: '$product.name', price: '$product.price', category: '$product.category', image: { $arrayElemAt: ['$product.images', 0] } } },
+    { $sort: { count: -1 } },
+    { $limit: 20 }
+  ]);
+
+  res.json({
+    success: true,
+    data: favoritesStats
+  });
+});
+
+// @desc    Get users with most favorites for admin
+// @route   GET /api/users/admin/users-favorites
+// @access  Private/Admin
+const getUsersFavoritesStats = asyncHandler(async (req, res) => {
+  const userStats = await User.aggregate([
+    { $project: { name: 1, email: 1, favoritesCount: { $size: '$wishlist' }, createdAt: 1 } },
+    { $sort: { favoritesCount: -1 } },
+    { $limit: 50 }
+  ]);
+
+  res.json({
+    success: true,
+    data: userStats
+  });
+});
+
 export {
   authUser,
   registerUser,
@@ -363,6 +444,9 @@ export {
   updateUserAddress,
   deleteUserAddress,
   getFavorites,
+  toggleFavorites,
   addToFavorites,
-  removeFromFavorites
+  removeFromFavorites,
+  getFavoritesAnalytics,
+  getUsersFavoritesStats
 };

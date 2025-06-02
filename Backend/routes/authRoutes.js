@@ -173,6 +173,7 @@ router.post('/logout', protect, (req, res) => {
 // Forgot Password
 router.post('/forgot-password', async (req, res) => {
     try {
+        console.log('🔧 Forgot password request received:', req.body);
         const { email } = req.body;
 
         if (!email) {
@@ -187,11 +188,14 @@ router.post('/forgot-password', async (req, res) => {
         
         if (!user) {
             // Return success even if user doesn't exist for security
+            console.log('⚠️ User not found for email:', email);
             return res.json({
                 status: 'success',
                 message: 'If an account with that email exists, a password reset link has been sent.'
             });
         }
+
+        console.log('👤 User found:', user.firstName, user.lastName);
 
         // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
@@ -201,33 +205,54 @@ router.post('/forgot-password', async (req, res) => {
         user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
 
         await user.save();
+        console.log('💾 Reset token saved to user');
 
         // Send email
         try {
-            await emailService.sendPasswordReset(user.email, resetToken);
+            const emailResult = await emailService.sendPasswordReset(user.email, resetToken);
+            console.log('📧 Email service result:', emailResult);
             
             res.json({
                 status: 'success',
-                message: 'Password reset link sent to your email'
+                message: 'Password reset link sent to your email',
+                developmentInfo: process.env.NODE_ENV !== 'production' ? {
+                    resetToken: resetToken,
+                    resetUrl: `http://localhost:5173/reset-password/${resetToken}`
+                } : undefined
             });
         } catch (emailError) {
-            console.error('Email sending failed:', emailError);
+            console.error('❌ Email sending failed:', emailError);
             
-            // Clear the reset token if email fails
-            user.passwordResetToken = undefined;
-            user.passwordResetExpires = undefined;
-            await user.save();
-            
-            res.status(500).json({
-                status: 'error',
-                message: 'Failed to send password reset email. Please try again later.'
-            });
+            // In development mode, still return success since we're just logging
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('🔧 Development mode: Treating email "failure" as success');
+                res.json({
+                    status: 'success',
+                    message: 'Password reset link sent to your email (development mode)',
+                    developmentInfo: {
+                        resetToken: resetToken,
+                        resetUrl: `http://localhost:5173/reset-password/${resetToken}`,
+                        note: 'Email was logged to console instead of sent'
+                    }
+                });
+            } else {
+                // Clear the reset token if email fails in production
+                user.passwordResetToken = undefined;
+                user.passwordResetExpires = undefined;
+                await user.save();
+                
+                res.status(500).json({
+                    status: 'error',
+                    message: 'Failed to send password reset email. Please try again later.'
+                });
+            }
         }
     } catch (error) {
-        console.error('Forgot password error:', error);
+        console.error('❌ Forgot password error:', error);
         res.status(500).json({
             status: 'error',
-            message: 'Server error occurred while processing your request'
+            message: 'Server error occurred while processing your request',
+            error: process.env.NODE_ENV !== 'production' ? error.message : undefined
         });
     }
 });

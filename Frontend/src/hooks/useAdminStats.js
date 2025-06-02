@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 export function useAdminStats() {
     const [stats, setStats] = useState({
@@ -17,7 +17,7 @@ export function useAdminStats() {
     const fetchStats = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/admin/stats');
+            const response = await api.get('/admin/stats');
             setStats(response.data);
             setError(null);
         } catch (err) {

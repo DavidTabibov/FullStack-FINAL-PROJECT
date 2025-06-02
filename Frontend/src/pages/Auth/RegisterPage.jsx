@@ -84,17 +84,34 @@ const RegisterPage = () => {
             toast.info('Creating your account...');
 
             // Use the auth service instead of direct axios call
-            await register({
+            const result = await register({
                 firstName: formData.firstName.trim(),
                 lastName: formData.lastName.trim(),
                 email: formData.email.trim().toLowerCase(),
                 password: formData.password
             });
 
-            toast.success('Account created successfully! Welcome to Luxe Boutique!');
-            
-            // Redirect immediately after successful registration
-            navigate('/');
+            if (result.success) {
+                toast.success('Account created successfully! Welcome to Luxe Boutique!');
+                // Redirect immediately after successful registration
+                navigate('/');
+            } else {
+                const errorMessage = result.error || 'Registration failed';
+                
+                if (errorMessage.includes('email') && errorMessage.includes('already')) {
+                    setErrors({ email: ['This email is already registered'] });
+                    toast.error('An account with this email already exists.');
+                } else if (errorMessage.includes('password')) {
+                    setErrors({ password: [errorMessage] });
+                    toast.error('Password requirements not met.');
+                } else if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
+                    setErrors({ email: ['Please enter a valid email address'] });
+                    toast.error('Please enter a valid email address.');
+                } else {
+                    setErrors({ general: errorMessage });
+                    toast.error(errorMessage);
+                }
+            }
 
         } catch (error) {
             console.error('Registration error:', error);

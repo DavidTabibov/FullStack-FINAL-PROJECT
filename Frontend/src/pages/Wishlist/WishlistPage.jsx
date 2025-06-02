@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { getWishlist, removeFromWishlist, clearWishlist } from '../../services/wishlist';
 import Loading from '../../components/common/Loading';
 
 const WishlistPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
-    fetchWishlist();
-  }, []);
+    if (isAuthenticated) {
+      fetchWishlist();
+    } else {
+      setLoading(false);
+      setWishlistItems([]);
+    }
+  }, [isAuthenticated]);
 
   const fetchWishlist = async () => {
+    if (!isAuthenticated) {
+      setWishlistItems([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       const items = await getWishlist();
@@ -93,6 +106,25 @@ const WishlistPage = () => {
   };
 
   if (loading) return <Loading type="page" text="Loading wishlist..." />;
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="display-1 mb-4">🔒</div>
+        <h2 className="h3 fw-bold mb-4">Please Login</h2>
+        <p className="text-muted mb-4">
+          You need to be logged in to view your wishlist
+        </p>
+        <button
+          onClick={() => navigate('/login')}
+          className="btn btn-primary btn-lg"
+        >
+          Login
+        </button>
+      </div>
+    );
+  }
 
   if (error) {
     return (

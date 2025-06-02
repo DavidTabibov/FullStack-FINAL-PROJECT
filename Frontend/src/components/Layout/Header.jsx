@@ -7,7 +7,7 @@ import { useCart } from '../../context/CartContext';
 
 const Header = () => {
   const [isNavCollapsed, setIsNavCollapsed] = useState(true);
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { showToast } = useToast();
   const { itemCount } = useCart();
   const location = useLocation();
@@ -191,6 +191,17 @@ const Header = () => {
                         Favorites
                       </Link>
                     </li>
+                    {isAdmin && (
+                      <>
+                        <li><hr className="dropdown-divider" /></li>
+                        <li>
+                          <Link className="dropdown-item text-primary fw-semibold" to="/admin/dashboard" onClick={closeNav}>
+                            <i className="bi bi-speedometer2 me-2"></i>
+                            Admin Dashboard
+                          </Link>
+                        </li>
+                      </>
+                    )}
                     <li><hr className="dropdown-divider" /></li>
                     <li>
                       <button className="dropdown-item" onClick={handleLogout}>

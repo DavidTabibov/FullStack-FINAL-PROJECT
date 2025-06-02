@@ -61,7 +61,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
         cart.items.push({
             product: productId,
             name: product.name,
-            image: product.images[0] || '/uploads/default-product.jpg',
+            image: product.images[0] || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=300&fit=crop',
             price: product.salePrice > 0 ? product.salePrice : product.price,
             quantity,
             size,

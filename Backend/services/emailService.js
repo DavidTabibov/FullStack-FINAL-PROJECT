@@ -2,17 +2,30 @@ import nodemailer from 'nodemailer';
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER || 'noreply@luxefashionboutique.com',
-        pass: process.env.EMAIL_PASS || 'your-app-password'
-      }
-    });
+    // Check if we're in development mode or don't have email credentials
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const hasEmailCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+    
+    if (isDevelopment || !hasEmailCredentials) {
+      // Use development mode - log emails instead of sending them
+      console.log('📧 Email Service: Running in development mode (emails will be logged)');
+      this.developmentMode = true;
+      this.transporter = null;
+    } else {
+      // Production mode with real SMTP
+      this.developmentMode = false;
+      this.transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+    }
   }
 
   async sendPasswordReset(email, resetToken) {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
     
     const mailOptions = {
       from: process.env.EMAIL_USER || 'noreply@luxefashionboutique.com',
@@ -62,8 +75,25 @@ class EmailService {
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
-      return { success: true, message: 'Password reset email sent successfully' };
+      if (this.developmentMode) {
+        // Development mode - log the email instead of sending
+        console.log('\n🔧 DEVELOPMENT MODE - Email not actually sent');
+        console.log('📧 Password Reset Email Details:');
+        console.log('  To:', email);
+        console.log('  Subject:', mailOptions.subject);
+        console.log('  Reset URL:', resetUrl);
+        console.log('  Reset Token:', resetToken);
+        console.log('───────────────────────────────────────────');
+        console.log('ℹ️  In production, this email would be sent via SMTP');
+        console.log('🔗 For testing, you can manually visit:', resetUrl);
+        console.log('───────────────────────────────────────────\n');
+        
+        return { success: true, message: 'Password reset email logged (development mode)' };
+      } else {
+        // Production mode - actually send the email
+        await this.transporter.sendMail(mailOptions);
+        return { success: true, message: 'Password reset email sent successfully' };
+      }
     } catch (error) {
       console.error('Email sending error:', error);
       throw new Error('Failed to send password reset email');
@@ -72,9 +102,14 @@ class EmailService {
 
   async testConnection() {
     try {
-      await this.transporter.verify();
-      console.log('Email service ready');
-      return true;
+      if (this.developmentMode) {
+        console.log('📧 Email service ready (development mode)');
+        return true;
+      } else {
+        await this.transporter.verify();
+        console.log('📧 Email service ready (production mode)');
+        return true;
+      }
     } catch (error) {
       console.error('Email service connection failed:', error);
       return false;

@@ -11,7 +11,10 @@ import {
   updateUser,
   addToFavorites,
   removeFromFavorites,
-  getFavorites
+  getFavorites,
+  toggleFavorites,
+  getFavoritesAnalytics,
+  getUsersFavoritesStats
 } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -24,8 +27,12 @@ router.post('/register', registerUser);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.get('/favorites', protect, getFavorites);
-router.post('/favorites/:id', protect, addToFavorites);
+router.post('/favorites/:id', protect, toggleFavorites);
 router.delete('/favorites/:id', protect, removeFromFavorites);
+
+// נתיבים למנהל - Analytics
+router.get('/admin/favorites-analytics', protect, admin, getFavoritesAnalytics);
+router.get('/admin/users-favorites', protect, admin, getUsersFavoritesStats);
 
 // נתיבים למנהל
 router.get('/', protect, admin, getUsers);

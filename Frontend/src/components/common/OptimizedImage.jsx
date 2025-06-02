@@ -75,19 +75,26 @@ const OptimizedImage = ({
 
   // Generate fallback image based on category
   const generateFallbackSrc = (alt, width = 400, height = 300) => {
-    const randomId = Math.floor(Math.random() * 1000);
     
     if (alt?.toLowerCase().includes('kids') || alt?.toLowerCase().includes('children')) {
-      return `https://picsum.photos/${width}/${height}?random=kids${randomId}`;
+      // Use better kids clothing images instead of random stock photos
+      const kidsImages = [
+        'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&h=600&fit=crop&crop=center', // Kids clothing store
+        'https://images.unsplash.com/photo-1514989940723-e8e51635b782?w=500&h=600&fit=crop&crop=center', // Kids shoes
+        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&h=600&fit=crop&crop=center', // Kids fashion
+        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=600&fit=crop&crop=center'  // Colorful kids dress
+      ];
+      const randomIndex = Math.floor(Math.random() * kidsImages.length);
+      return kidsImages[randomIndex];
     } else if (alt?.toLowerCase().includes('men') || alt?.toLowerCase().includes('male')) {
-      return `https://picsum.photos/${width}/${height}?random=men${randomId}`;
+      return `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=${width}&h=${height}&fit=crop&crop=center`;
     } else if (alt?.toLowerCase().includes('women') || alt?.toLowerCase().includes('female')) {
-      return `https://picsum.photos/${width}/${height}?random=women${randomId}`;
+      return `https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=${width}&h=${height}&fit=crop&crop=center`;
     } else if (alt?.toLowerCase().includes('accessories')) {
-      return `https://picsum.photos/${width}/${height}?random=accessories${randomId}`;
+      return `https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=${width}&h=${height}&fit=crop&crop=center`;
     }
     
-    return `https://picsum.photos/${width}/${height}?random=${randomId}`;
+    return `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=${width}&h=${height}&fit=crop&crop=center`;
   };
 
   const handleLoad = () => {

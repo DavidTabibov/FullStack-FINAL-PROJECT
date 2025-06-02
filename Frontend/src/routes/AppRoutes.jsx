@@ -17,6 +17,7 @@ import ContactPage from '../pages/Contact/ContactPage';
 import ProfilePage from '../pages/Profile/ProfilePage';
 import OrdersPage from '../pages/Orders/OrdersPage';
 import WishlistPage from '../pages/Wishlist/WishlistPage';
+import AdminDashboard from '../pages/Admin/AdminDashboard';
 
 const AppRoutes = () => {
   return (
@@ -43,6 +44,9 @@ const AppRoutes = () => {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
         
         {/* 404 Page */}
         <Route path="*" element={

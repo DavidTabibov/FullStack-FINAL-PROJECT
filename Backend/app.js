@@ -5,8 +5,10 @@ import path from 'path';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import logger from './middleware/loggerMiddleware.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
+import { checkLastActivity, rateLimiter } from './middleware/authMiddleware.js';
 import connectDB from './config/db.js';
 
 // Load environment variables
@@ -76,6 +78,27 @@ app.use(session({
 // Use logger middleware
 app.use(logger);
 
+// Rate limiting middleware - protect against DDoS attacks
+const limiter = rateLimit({
+    windowMs: 24 * 60 * 60 * 1000, // 24 hours
+    max: 1000, // limit each IP to 1000 requests per windowMs
+    message: {
+        error: 'Too many requests from this IP, please try again later.',
+        retryAfter: '24 hours'
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply rate limiting to all routes
+app.use(limiter);
+
+// Session activity tracking and auto-logout
+app.use(checkLastActivity);
+
+// Apply custom rate limiter for authenticated users
+app.use(rateLimiter);
+
 // Static files directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
@@ -132,14 +155,14 @@ app.post('/api/create-sample-product', async (req, res) => {
         const Product = (await import('./models/Product.js')).default;
         
         const sampleProduct = {
-            name: "חולצת טי שירט קלאסית",
-            description: "חולצת טי שירט נוחה ואיכותית מכותנה 100%, מושלמת לכל יום",
+            name: "Classic T-Shirt",
+            description: "Comfortable and high-quality 100% cotton t-shirt, perfect for everyday wear",
             brand: "Fashion Brand",
             category: "men",
-            subcategory: "חולצות",
+            subcategory: "shirts",
             price: 89.90,
             salePrice: 0,
-            images: ["/uploads/default-tshirt.jpg"],
+            images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=500&fit=crop"],
             sizes: [
                 { size: "S", quantity: 10 },
                 { size: "M", quantity: 15 },
@@ -147,9 +170,9 @@ app.post('/api/create-sample-product', async (req, res) => {
                 { size: "XL", quantity: 8 }
             ],
             colors: [
-                { name: "שחור", code: "#000000" },
-                { name: "לבן", code: "#FFFFFF" },
-                { name: "כחול", code: "#0066CC" }
+                { name: "Black", code: "#000000" },
+                { name: "White", code: "#FFFFFF" },
+                { name: "Blue", code: "#0066CC" }
             ],
             countInStock: 45,
             isFeatured: true,
@@ -179,14 +202,14 @@ app.post('/api/create-sample-products', async (req, res) => {
         
         const sampleProducts = [
             {
-                name: "ג'ינס סקיני נשים",
-                description: "ג'ינס סקיני מחמיא ונוח, עשוי מבד איכותי עם מעט אלסטן",
+                name: "Women's Skinny Jeans",
+                description: "Flattering and comfortable skinny jeans made from quality fabric with slight stretch",
                 brand: "Denim Co",
                 category: "women",
-                subcategory: "מכנסיים",
+                subcategory: "pants",
                 price: 199.90,
                 salePrice: 149.90,
-                images: ["/uploads/default-jeans.jpg"],
+                images: ["https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500&h=500&fit=crop"],
                 sizes: [
                     { size: "XS", quantity: 5 },
                     { size: "S", quantity: 12 },
@@ -195,9 +218,9 @@ app.post('/api/create-sample-products', async (req, res) => {
                     { size: "XL", quantity: 6 }
                 ],
                 colors: [
-                    { name: "כחול כהה", code: "#1a237e" },
-                    { name: "כחול בהיר", code: "#42a5f5" },
-                    { name: "שחור", code: "#000000" }
+                    { name: "Dark Blue", code: "#1a237e" },
+                    { name: "Light Blue", code: "#42a5f5" },
+                    { name: "Black", code: "#000000" }
                 ],
                 countInStock: 51,
                 isFeatured: true,
@@ -205,14 +228,14 @@ app.post('/api/create-sample-products', async (req, res) => {
                 isSale: true
             },
             {
-                name: "נעלי ספורט ילדים",
-                description: "נעלי ספורט נוחות וצבעוניות לילדים, מתאימות לפעילות יומיומית",
+                name: "Kids Sports Shoes",
+                description: "Comfortable and colorful sports shoes for kids, suitable for daily activities",
                 brand: "Kids Sport",
                 category: "kids",
-                subcategory: "נעליים",
+                subcategory: "shoes",
                 price: 129.90,
                 salePrice: 0,
-                images: ["/uploads/default-kids-shoes.jpg"],
+                images: ["https://images.unsplash.com/photo-1514989940723-e8e51635b782?w=500&h=500&fit=crop"],
                 sizes: [
                     { size: "28", quantity: 8 },
                     { size: "30", quantity: 10 },
@@ -221,9 +244,9 @@ app.post('/api/create-sample-products', async (req, res) => {
                     { size: "36", quantity: 7 }
                 ],
                 colors: [
-                    { name: "ורוד", code: "#e91e63" },
-                    { name: "כחול", code: "#2196f3" },
-                    { name: "ירוק", code: "#4caf50" }
+                    { name: "Pink", code: "#e91e63" },
+                    { name: "Blue", code: "#2196f3" },
+                    { name: "Green", code: "#4caf50" }
                 ],
                 countInStock: 46,
                 isFeatured: false,
@@ -231,21 +254,21 @@ app.post('/api/create-sample-products', async (req, res) => {
                 isSale: false
             },
             {
-                name: "תיק יד אלגנטי",
-                description: "תיק יד מעור איכותי, מושלם לאירועים מיוחדים ולשימוש יומיומי",
+                name: "Elegant Handbag",
+                description: "High-quality leather handbag, perfect for special occasions and daily use",
                 brand: "Luxury Bags",
                 category: "accessories",
-                subcategory: "תיקים",
+                subcategory: "bags",
                 price: 299.90,
                 salePrice: 0,
-                images: ["/uploads/default-handbag.jpg"],
+                images: ["https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop"],
                 sizes: [
                     { size: "One Size", quantity: 20 }
                 ],
                 colors: [
-                    { name: "שחור", code: "#000000" },
-                    { name: "חום", code: "#8d6e63" },
-                    { name: "אדום", code: "#d32f2f" }
+                    { name: "Black", code: "#000000" },
+                    { name: "Brown", code: "#8d6e63" },
+                    { name: "Red", code: "#d32f2f" }
                 ],
                 countInStock: 20,
                 isFeatured: true,

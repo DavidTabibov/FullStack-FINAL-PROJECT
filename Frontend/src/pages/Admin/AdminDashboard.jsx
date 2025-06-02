@@ -1,6 +1,8 @@
 // src/pages/Admin/AdminDashboard.jsx
 import React, { useState } from 'react';
 import StatsCard from './StatsCard';
+import AdminFavoritesManagement from './AdminFavoritesManagement';
+import AdminUsersManagement from './AdminUsersManagement';
 
 function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('stats');
@@ -67,6 +69,22 @@ function AdminDashboard() {
                             Users
                         </button>
                     </li>
+                    <li className="nav-item" role="presentation">
+                        <button
+                            className={`nav-link ${activeTab === 'favorites' ? 'active' : ''}`}
+                            id="favorites-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#favorites"
+                            type="button"
+                            role="tab"
+                            aria-controls="favorites"
+                            aria-selected={activeTab === 'favorites'}
+                            onClick={() => setActiveTab('favorites')}
+                        >
+                            <i className="bi bi-heart-fill me-2"></i>
+                            Favorites & Analytics
+                        </button>
+                    </li>
                 </ul>
             </div>
 
@@ -103,15 +121,13 @@ function AdminDashboard() {
 
                         {activeTab === 'users' && (
                             <div className="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
-                                <h2 className="h4 fw-bold text-dark mb-4">User Management</h2>
-                                <div className="bg-light rounded p-5 text-center">
-                                    <i className="bi bi-people display-1 text-success mb-3"></i>
-                                    <h3 className="h5 fw-semibold text-dark mb-2">User Management</h3>
-                                    <p className="text-muted">Manage user accounts and permissions.</p>
-                                    <button className="btn btn-success mt-3">
-                                        View All Users
-                                    </button>
-                                </div>
+                                <AdminUsersManagement />
+                            </div>
+                        )}
+
+                        {activeTab === 'favorites' && (
+                            <div className="tab-pane fade show active" id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
+                                <AdminFavoritesManagement />
                             </div>
                         )}
                     </div>

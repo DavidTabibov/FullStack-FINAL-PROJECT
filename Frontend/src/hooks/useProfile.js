@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from './useAuth';
 
 export function useProfile() {
@@ -12,7 +12,7 @@ export function useProfile() {
         setError(null);
 
         try {
-            const response = await axios.put('/api/users/profile', profileData);
+            const response = await api.put('/users/profile', profileData);
             login(response.data); // Update the info in context
             console.log('Profile updated successfully');
             return true;
