@@ -24,7 +24,7 @@ const authService = {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
-      const response = await api.get('/auth/me');
+      const response = await api.get('/users/profile');
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to get user data");

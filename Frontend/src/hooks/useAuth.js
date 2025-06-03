@@ -26,8 +26,17 @@ const AuthProvider = ({ children }) => {
         // Remove automatic token validation to prevent unnecessary logouts
         // We'll handle validation only when needed
         if (token) {
-            const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            setUser(userData);
+            const userDataString = localStorage.getItem('user');
+            if (userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    setUser(userData);
+                } catch (error) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+                    setToken(null);
+                }
+            }
         }
         setLoading(false);
     }, [token]);
@@ -107,7 +116,6 @@ const AuthProvider = ({ children }) => {
                 throw new Error('Invalid response format');
             }
         } catch (error) {
-            console.error('Login error:', error);
             return { 
                 success: false, 
                 error: error.message || 'Login failed' 
@@ -144,7 +152,6 @@ const AuthProvider = ({ children }) => {
                 throw new Error('Invalid response format');
             }
         } catch (error) {
-            console.error('Registration error:', error);
             return { 
                 success: false, 
                 error: error.message || 'Registration failed' 
@@ -163,9 +170,15 @@ const AuthProvider = ({ children }) => {
         localStorage.removeItem('cart');
     };
 
-    const updateUser = (userData) => {
+    const updateUser = (userData, newToken = null) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Update token if provided
+        if (newToken) {
+            setToken(newToken);
+            localStorage.setItem('token', newToken);
+        }
     };
 
     const isAuthenticated = !!token && !!user;

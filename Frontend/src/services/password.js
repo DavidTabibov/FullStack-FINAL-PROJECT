@@ -21,7 +21,7 @@ class PasswordService {
 
     async changePassword(oldPassword, newPassword) {
         try {
-            await api.post('/auth/change-password', { oldPassword, newPassword });
+            await api.put('/users/profile', { password: newPassword });
             return { success: true, message: 'הסיסמה שונתה בהצלחה' };
         } catch (error) {
             throw new Error(error.response?.data?.message || 'שגיאה בשינוי הסיסמה');

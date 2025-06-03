@@ -12,11 +12,22 @@ export function useProfile() {
         setError(null);
 
         try {
-            await api.put('/auth/profile', profileData);
+            const response = await api.put('/users/profile', profileData);
             
-            // Refresh user data
-            const userResponse = await api.get('/auth/me');
-            updateUser(userResponse.data.user);
+            // The backend returns the user data directly, not wrapped in data.user
+            const updatedUserData = {
+                _id: response.data._id,
+                firstName: response.data.firstName,
+                lastName: response.data.lastName,
+                fullName: response.data.fullName,
+                email: response.data.email,
+                phone: response.data.phone,
+                role: response.data.role,
+                isAdmin: response.data.role === 'admin'
+            };
+            
+            // Update user and token
+            updateUser(updatedUserData, response.data.token);
             
             return true;
         } catch (err) {

@@ -9,9 +9,8 @@ const useChangePassword = () => {
     const changePassword = async (currentPassword, newPassword) => {
         setLoading(true);
         try {
-            const response = await api.put('/auth/change-password', {
-                currentPassword,
-                newPassword
+            const response = await api.put('/users/profile', {
+                password: newPassword
             });
             
             if (response.data) {
