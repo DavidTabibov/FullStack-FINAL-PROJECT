@@ -1,27 +1,36 @@
 ﻿{
-    "short_name": "Fashion Store",
-    "name": "Modern Fashion Store",
+    "short_name": "Luxe Fashion",
+    "name": "Luxe Fashion Boutique - Premium Fashion Store",
+    "description": "Premium fashion and timeless elegance for the modern lifestyle",
     "icons": [
         {
-            "src": "favicon.ico",
-            "sizes": "64x64 32x32 24x24 16x16",
-            "type": "image/x-icon"
+            "src": "/favicon-16x16.svg",
+            "sizes": "16x16",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/favicon.svg",
+            "sizes": "32x32",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/logo.svg",
+            "sizes": "192x192 512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
         },
         {
             "src": "/logo192.png",
             "type": "image/png",
             "sizes": "192x192"
-        },
-        {
-            "src": "logo512.png",
-            "type": "image/png",
-            "sizes": "512x512"
         }
     ],
-    "start_url": ".",
+    "start_url": "/",
     "display": "standalone",
-    "theme_color": "#2c3e50",
-    "background_color": "#ffffff",
+    "theme_color": "#1a1a1a",
+    "background_color": "#1a1a1a",
     "dir": "ltr",
-    "lang": "he"
+    "lang": "en",
+    "categories": ["fashion", "shopping", "lifestyle"],
+    "orientation": "portrait-primary"
 }
