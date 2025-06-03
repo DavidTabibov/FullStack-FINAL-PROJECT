@@ -34,6 +34,19 @@ const getProducts = asyncHandler(async (req, res) => {
     queryObj.brand = req.query.brand;
   }
   
+  // Filter by featured, new, or sale status
+  if (req.query.featured === 'true') {
+    queryObj.isFeatured = true;
+  }
+  
+  if (req.query.new === 'true') {
+    queryObj.isNew = true;
+  }
+  
+  if (req.query.sale === 'true') {
+    queryObj.isSale = true;
+  }
+  
   if (req.query.priceMin && req.query.priceMax) {
     queryObj.price = { 
       $gte: Number(req.query.priceMin), 
@@ -173,7 +186,7 @@ const getProductBrands = asyncHandler(async (req, res) => {
 const getFeaturedProducts = asyncHandler(async (req, res) => {
   const products = await Product.find({ isFeatured: true })
     .limit(8)
-    .select('name price images category brand');
+    .select('name price salePrice images category brand description isFeatured isNew isSale');
   
   res.json(products);
 });

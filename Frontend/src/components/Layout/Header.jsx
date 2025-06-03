@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useToast } from '../../context/ToastContext';
+// import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
 
 const Header = () => {
   const [isNavCollapsed, setIsNavCollapsed] = useState(true);
   const { user, logout, isAdmin } = useAuth();
-  const { showToast } = useToast();
+  // const { showToast } = useToast();
   const { itemCount } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,11 +23,13 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      showToast('Logged out successfully', 'success');
+      // showToast('Logged out successfully', 'success');
+      console.log('Logged out successfully');
       navigate('/');
       closeNav();
     } catch (error) {
-      showToast('Error logging out', 'error');
+      // showToast('Error logging out', 'error');
+      console.error('Error logging out', error);
     }
   };
 
@@ -48,7 +50,16 @@ const Header = () => {
       <nav className="navbar navbar-expand-lg navbar-light py-3">
         <div className="container">
           {/* Brand */}
-          <Link className="navbar-brand d-flex align-items-center text-decoration-none" to="/">
+          <Link 
+            className="navbar-brand d-flex align-items-center text-decoration-none" 
+            to="/"
+            style={{
+              outline: 'none',
+              border: 'none',
+              boxShadow: 'none'
+            }}
+            onFocus={(e) => e.target.style.outline = 'none'}
+          >
             <span className="fs-2 me-2">✨</span>
             <span className="fw-bold fs-4" style={{ color: '#6366f1' }}>
               Luxe <span style={{ color: '#d97706' }}>Boutique</span>
@@ -212,14 +223,26 @@ const Header = () => {
                   </ul>
                 </div>
               ) : (
-                <Link
-                  to="/login"
-                  className="btn btn-primary px-4"
-                  onClick={closeNav}
-                  style={{ borderRadius: '25px' }}
-                >
-                  Login
-                </Link>
+                <div className="d-flex gap-2">
+                  <Link
+                    to="/register"
+                    className="btn btn-outline-primary px-4"
+                    onClick={closeNav}
+                    style={{ borderRadius: '25px' }}
+                  >
+                    <i className="bi bi-person-plus me-2"></i>
+                    Register
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="btn btn-primary px-4"
+                    onClick={closeNav}
+                    style={{ borderRadius: '25px' }}
+                  >
+                    <i className="bi bi-box-arrow-in-right me-2"></i>
+                    Login
+                  </Link>
+                </div>
               )}
             </div>
           </div>

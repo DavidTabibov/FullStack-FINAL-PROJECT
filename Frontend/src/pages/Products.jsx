@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/products/ProductCard';
 import Loading from '../components/common/Loading';
+import Pagination from '../components/common/Pagination';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
@@ -17,6 +18,8 @@ const Products = () => {
   const [sortBy, setSortBy] = useState('name');
   const [searchTerm, setSearchTerm] = useState('');
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
   const { showToast } = useToast();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
@@ -50,15 +53,18 @@ const Products = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get('/products');
+        
+        // Fetch with larger limit to get all products
+        const response = await api.get('/products?limit=1000');
         const data = response.data;
         const productArray = Array.isArray(data) ? data : (data.products || []);
+        
+        console.log('Fetched products:', productArray.length); // Debug log
         setProducts(productArray);
         setFilteredProducts(productArray);
       } catch (error) {
         console.error('Error fetching products:', error);
         setError('Unable to load products at the moment.');
-        // Set empty array for fallback
         setProducts([]);
         setFilteredProducts([]);
       } finally {
@@ -67,7 +73,6 @@ const Products = () => {
     };
 
     const fetchFavorites = async () => {
-      // Only fetch favorites if user is authenticated
       if (!isAuthenticated) {
         setFavoriteIds([]);
         return;
@@ -78,7 +83,6 @@ const Products = () => {
         setFavoriteIds(ids);
       } catch (error) {
         console.error('Error fetching favorites:', error);
-        // Not critical error, just set empty array
         setFavoriteIds([]);
       }
     };
@@ -90,20 +94,42 @@ const Products = () => {
   useEffect(() => {
     let filtered = [...products];
 
-    // Filter by category with more flexible matching
+    // Filter by category with strict matching
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(product => {
-        const productCategory = product.category?.toLowerCase() || '';
-        const selectedCat = selectedCategory.toLowerCase();
+        const productCategory = product.category?.toLowerCase().trim() || '';
+        const selectedCat = selectedCategory.toLowerCase().trim();
         
-        // Exact match or contains match for better flexibility
-        return productCategory === selectedCat || 
-               productCategory.includes(selectedCat) ||
-               // Handle different category naming patterns
-               (selectedCat === 'women' && (productCategory.includes('women') || productCategory.includes('female') || productCategory.includes('ladies'))) ||
-               (selectedCat === 'men' && (productCategory.includes('men') || productCategory.includes('male') || productCategory.includes('guys'))) ||
-               (selectedCat === 'kids' && (productCategory.includes('kids') || productCategory.includes('children') || productCategory.includes('child'))) ||
-               (selectedCat === 'accessories' && (productCategory.includes('accessories') || productCategory.includes('accessory')));
+        // Exact match first
+        if (productCategory === selectedCat) {
+          return true;
+        }
+        
+        // Strict category matching to prevent cross-contamination
+        switch (selectedCat) {
+          case 'women':
+            return productCategory === 'women' || 
+                   productCategory === 'womens' || 
+                   productCategory === 'female' || 
+                   productCategory === 'ladies' ||
+                   (productCategory.startsWith('women') && !productCategory.includes('men'));
+          case 'men':
+            return productCategory === 'men' || 
+                   productCategory === 'mens' || 
+                   productCategory === 'male' || 
+                   productCategory === 'guys' ||
+                   (productCategory.startsWith('men') && !productCategory.includes('women'));
+          case 'kids':
+            return productCategory === 'kids' || 
+                   productCategory === 'children' || 
+                   productCategory === 'child' ||
+                   productCategory === 'kids';
+          case 'accessories':
+            return productCategory === 'accessories' || 
+                   productCategory === 'accessory';
+          default:
+            return false;
+        }
       });
     }
 
@@ -131,10 +157,26 @@ const Products = () => {
     });
 
     setFilteredProducts(filtered);
+    // Reset to first page when filters change
+    setCurrentPage(1);
   }, [products, selectedCategory, sortBy, searchTerm]);
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to top when page changes
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   const handleAddToCart = (productData) => {
-    // Use CartContext instead of localStorage
     addToCart(productData);
     showToast('Product added to cart!');
   };
@@ -148,16 +190,22 @@ const Products = () => {
     try {
       await toggleFavorite(productId);
       
-      // Update local favorites state
+      const isCurrentlyFavorite = favoriteIds.includes(productId);
+      
       setFavoriteIds(prev => {
         if (prev.includes(productId)) {
-          showToast('Removed from favorites', 'success');
           return prev.filter(id => id !== productId);
         } else {
-          showToast('Added to favorites', 'success');
           return [...prev, productId];
         }
       });
+      
+      // Move toast calls outside setState to prevent render warning
+      if (isCurrentlyFavorite) {
+        showToast('Removed from favorites', 'success');
+      } else {
+        showToast('Added to favorites', 'success');
+      }
     } catch (error) {
       console.error('Error toggling favorite:', error);
       showToast('Error updating favorites. Please try again.', 'error');
@@ -284,18 +332,32 @@ const Products = () => {
               </button>
             </div>
           ) : (
-            <div className="row g-4">
-              {filteredProducts.map((product) => (
-                <div key={product._id} className="col-lg-3 col-md-4 col-sm-6">
-                  <ProductCard 
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onToggleFavorite={handleToggleFavorite}
-                    isFavorite={favoriteIds.includes(product._id)}
-                  />
-                </div>
-              ))}
-            </div>
+            <>
+              {/* Products Grid */}
+              <div className="row g-4">
+                {currentProducts.map((product) => (
+                  <div key={product._id} className="col-lg-3 col-md-4 col-sm-6">
+                    <ProductCard 
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favoriteIds.includes(product._id)}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredProducts.length}
+                />
+              )}
+            </>
           )}
         </div>
       </section>

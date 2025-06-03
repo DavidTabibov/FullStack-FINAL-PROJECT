@@ -11,6 +11,7 @@ import {
   updateUser,
   addToFavorites,
   removeFromFavorites,
+  clearAllFavorites,
   getFavorites,
   toggleFavorites,
   getFavoritesAnalytics,
@@ -27,6 +28,7 @@ router.post('/register', registerUser);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.get('/favorites', protect, getFavorites);
+router.delete('/favorites', protect, clearAllFavorites);
 router.post('/favorites/:id', protect, toggleFavorites);
 router.delete('/favorites/:id', protect, removeFromFavorites);
 

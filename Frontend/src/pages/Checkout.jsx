@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../context/ToastContext';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,6 +28,8 @@ const Checkout = () => {
     cvv: '',
     cardName: ''
   });
+
+  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -74,29 +78,149 @@ const Checkout = () => {
 
   const handleShippingSubmit = (e) => {
     e.preventDefault();
+    
+    // Clear previous validation errors
+    setValidationErrors({});
+    
+    // Strict validation for shipping information
+    if (!shippingInfo.firstName.trim()) {
+      showToast('Please enter your first name', 'warning');
+      setValidationErrors(prev => ({...prev, firstName: true}));
+      return;
+    }
+    
+    if (!shippingInfo.lastName.trim()) {
+      showToast('Please enter your last name', 'warning');
+      setValidationErrors(prev => ({...prev, lastName: true}));
+      return;
+    }
+    
+    if (!shippingInfo.email.trim() || !shippingInfo.email.includes('@')) {
+      showToast('Please enter a valid email address', 'warning');
+      setValidationErrors(prev => ({...prev, email: true}));
+      return;
+    }
+    
+    if (!shippingInfo.phone.trim() || shippingInfo.phone.length < 10) {
+      showToast('Please enter a valid phone number (at least 10 digits)', 'warning');
+      setValidationErrors(prev => ({...prev, phone: true}));
+      return;
+    }
+    
+    if (!shippingInfo.address.trim() || shippingInfo.address.length < 5) {
+      showToast('Please enter a complete address (at least 5 characters)', 'warning');
+      setValidationErrors(prev => ({...prev, address: true}));
+      return;
+    }
+    
+    if (!shippingInfo.city.trim()) {
+      showToast('Please enter your city', 'warning');
+      setValidationErrors(prev => ({...prev, city: true}));
+      return;
+    }
+    
+    if (!shippingInfo.postalCode.trim() || shippingInfo.postalCode.length < 3) {
+      showToast('Please enter a valid postal code', 'warning');
+      setValidationErrors(prev => ({...prev, postalCode: true}));
+      return;
+    }
+    
+    if (!shippingInfo.country.trim()) {
+      showToast('Please select your country', 'warning');
+      setValidationErrors(prev => ({...prev, country: true}));
+      return;
+    }
+    
+    showToast('Shipping information validated successfully!', 'success');
     setCurrentStep(2);
   };
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
+    
+    // Strict validation for payment information
+    if (!paymentInfo.cardNumber.trim()) {
+      showToast('Please enter your card number', 'warning');
+      return;
+    }
+    
+    if (!paymentInfo.cardName.trim()) {
+      showToast('Please enter the cardholder name', 'warning');
+      return;
+    }
+    
+    if (!paymentInfo.expiryDate.trim()) {
+      showToast('Please enter the expiry date', 'warning');
+      return;
+    }
+    
+    if (!paymentInfo.cvv.trim()) {
+      showToast('Please enter the CVV', 'warning');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Check if using test card
+      const cleanCardNumber = paymentInfo.cardNumber.replace(/\s/g, '');
+      const isTestCard = cleanCardNumber === '4532123456789012';
+      
+      if (isTestCard) {
+        // Validate test card details
+        if (paymentInfo.expiryDate !== '12/28' || paymentInfo.cvv !== '123') {
+          showToast('Invalid test card details. Please use: Expiry: 12/28, CVV: 123', 'error');
+          return;
+        }
+        // Simulate test card processing - always succeeds
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        showToast('✅ Test payment processed successfully with infinite funds!', 'success');
+        console.log('✅ Test payment processed successfully with infinite funds card!');
+      } else {
+        // For non-test cards, simulate realistic payment processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        // High chance of failure for non-test cards (simulating real-world scenario)
+        showToast('Payment declined. Please use the test credit card for demo purposes.', 'error');
+        return;
+      }
+      
+      // Create order object for success page
+      const orderData = {
+        orderId: 'ORD-' + Date.now(),
+        userId: user?._id || user?.id,
+        userEmail: user?.email,
+        total: calculateTotal(),
+        items: cartItems,
+        shippingInfo,
+        paymentInfo: {
+          cardNumber: paymentInfo.cardNumber.slice(-4),
+          cardType: isTestCard ? 'Test Card (Infinite Funds)' : 'Credit Card'
+        },
+        orderDate: new Date().toISOString(),
+        isTestOrder: isTestCard,
+        status: 'processing'
+      };
+      
+      // Save order to localStorage for Orders page
+      const existingOrders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+      existingOrders.push(orderData);
+      localStorage.setItem('userOrders', JSON.stringify(existingOrders));
       
       // Clear cart after successful order
       localStorage.removeItem('cart');
       
-      // Redirect to success page
-      navigate('/order-success', { 
-        state: { 
-          orderTotal: calculateTotal(),
-          orderItems: cartItems 
-        }
-      });
+      showToast('Order placed successfully! Redirecting...', 'success');
+      
+      // Small delay before redirect to show success message
+      setTimeout(() => {
+        navigate('/order-success', { 
+          state: orderData
+        });
+      }, 1500);
+      
     } catch (error) {
-      alert('Payment failed. Please try again.');
+      console.error('Payment error:', error);
+      showToast(`Payment failed: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -148,15 +272,6 @@ const Checkout = () => {
                   2
                 </div>
                 <span className="ms-2 fw-medium">Payment</span>
-              </div>
-              <div className={`mx-3 ${currentStep >= 3 ? 'bg-primary' : 'bg-light'}`} style={{width: '64px', height: '4px'}}></div>
-              <div className={`d-flex align-items-center ${currentStep >= 3 ? 'text-primary' : 'text-muted'}`}>
-                <div className={`rounded-circle d-flex align-items-center justify-content-center ${
-                  currentStep >= 3 ? 'bg-primary text-white' : 'bg-light'
-                }`} style={{width: '32px', height: '32px'}}>
-                  3
-                </div>
-                <span className="ms-2 fw-medium">Review</span>
               </div>
             </div>
           </div>
@@ -366,88 +481,22 @@ const Checkout = () => {
                       <button
                         type="submit"
                         className="btn btn-primary w-100 py-3"
+                        disabled={loading}
                       >
-                        Continue to Review
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Processing Payment...
+                          </>
+                        ) : (
+                          'Complete Order'
+                        )}
                       </button>
                     </form>
                   </div>
                 </div>
               )}
 
-              {currentStep === 3 && (
-                <div className="card border-0 shadow-sm">
-                  <div className="card-body p-4">
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                      <h2 className="h3 fw-bold mb-0">Order Review</h2>
-                      <button
-                        onClick={() => setCurrentStep(2)}
-                        className="btn btn-link text-primary p-0"
-                      >
-                        ← Back to Payment
-                      </button>
-                    </div>
-
-                    {/* Order Items */}
-                    <div className="mb-4">
-                      <h3 className="h5 fw-bold mb-3">Order Items</h3>
-                      {cartItems.map((item, index) => (
-                        <div key={index} className="d-flex align-items-center border-bottom pb-3 mb-3">
-                          <img
-                            src={item.image || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=80&h=80&fit=crop&crop=center'}
-                            alt={item.name}
-                            className="rounded"
-                            style={{width: '48px', height: '48px', objectFit: 'cover'}}
-                          />
-                          <div className="flex-grow-1 ms-3">
-                            <h4 className="h6 mb-1">{item.name}</h4>
-                            <p className="text-muted small mb-0">
-                              {item.size && `Size: ${item.size}`}
-                              {item.color && ` | Color: ${item.color}`}
-                              {` | Qty: ${item.quantity}`}
-                            </p>
-                          </div>
-                          <span className="fw-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Shipping Info */}
-                    <div className="mb-4">
-                      <h3 className="h5 fw-bold mb-3">Shipping Address</h3>
-                      <div className="bg-light p-3 rounded">
-                        <p className="mb-1">{shippingInfo.firstName} {shippingInfo.lastName}</p>
-                        <p className="mb-1">{shippingInfo.address}</p>
-                        <p className="mb-1">{shippingInfo.city}, {shippingInfo.postalCode}</p>
-                        <p className="mb-0">{shippingInfo.country}</p>
-                      </div>
-                    </div>
-
-                    {/* Payment Info */}
-                    <div className="mb-4">
-                      <h3 className="h5 fw-bold mb-3">Payment Method</h3>
-                      <div className="bg-light p-3 rounded">
-                        <p className="mb-1">**** **** **** {paymentInfo.cardNumber.slice(-4)}</p>
-                        <p className="mb-0">{paymentInfo.cardName}</p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={handlePlaceOrder}
-                      disabled={isProcessing}
-                      className="btn btn-success w-100 py-3"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Processing...
-                        </>
-                      ) : (
-                        'Place Order'
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Order Summary Sidebar */}

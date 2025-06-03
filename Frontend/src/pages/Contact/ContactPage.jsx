@@ -280,7 +280,7 @@ const ContactPage = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-5 py-lg-6 bg-light">
+      <section id="faq" className="py-5 py-lg-6 bg-light">
         <div className="container py-4 py-lg-5">
           <div className="text-center mb-5 mb-lg-6">
             <h2 className="display-6 display-lg-5 fw-bold mb-4 text-primary">

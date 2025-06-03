@@ -5,7 +5,7 @@ import { useAuth } from './useAuth';
 export function useProfile() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { login } = useAuth();
+    const { updateUser, user } = useAuth();
 
     const updateProfile = async (profileData) => {
         setLoading(true);
@@ -13,7 +13,22 @@ export function useProfile() {
 
         try {
             const response = await api.put('/users/profile', profileData);
-            login(response.data); // Update the info in context
+            
+            // Update the user in the auth context with the new profile data
+            // The backend returns user data directly in response.data
+            const updatedUser = {
+                ...user,
+                ...response.data,
+                firstName: response.data.firstName,
+                lastName: response.data.lastName,
+                fullName: response.data.fullName,
+                name: {
+                    first: response.data.firstName,
+                    last: response.data.lastName
+                }
+            };
+            
+            updateUser(updatedUser);
             console.log('Profile updated successfully');
             return true;
         } catch (err) {

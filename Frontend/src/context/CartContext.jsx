@@ -33,33 +33,70 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product) => {
     setCartItems(prev => {
-      const existingItem = prev.find(item => item._id === product._id);
+      // Create a unique identifier for the item including size and color variants
+      const itemKey = `${product._id}-${product.selectedSize || 'no-size'}-${product.selectedColor || 'no-color'}`;
+      
+      // Find existing item with same product ID, size, and color
+      const existingItem = prev.find(item => {
+        const existingKey = `${item._id}-${item.selectedSize || 'no-size'}-${item.selectedColor || 'no-color'}`;
+        return existingKey === itemKey;
+      });
+      
       if (existingItem) {
-        return prev.map(item =>
-          item._id === product._id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+        // If item with same variants exists, increase quantity
+        return prev.map(item => {
+          const existingKey = `${item._id}-${item.selectedSize || 'no-size'}-${item.selectedColor || 'no-color'}`;
+          return existingKey === itemKey
+            ? { ...item, quantity: item.quantity + (product.selectedQuantity || 1) }
+            : item;
+        });
       }
-      return [...prev, { ...product, quantity: 1 }];
+      
+      // If no existing item with same variants, add as new item
+      return [...prev, { 
+        ...product, 
+        quantity: product.selectedQuantity || 1,
+        cartItemKey: itemKey // Store the unique key for future reference
+      }];
     });
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prev => prev.filter(item => item._id !== productId));
+  const removeFromCart = (productId, selectedSize = null, selectedColor = null) => {
+    setCartItems(prev => {
+      if (selectedSize !== null || selectedColor !== null) {
+        // Remove specific variant
+        const itemKey = `${productId}-${selectedSize || 'no-size'}-${selectedColor || 'no-color'}`;
+        return prev.filter(item => {
+          const existingKey = `${item._id}-${item.selectedSize || 'no-size'}-${item.selectedColor || 'no-color'}`;
+          return existingKey !== itemKey;
+        });
+      }
+      // Fallback: remove by product ID only (for backward compatibility)
+      return prev.filter(item => item._id !== productId);
+    });
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = (productId, quantity, selectedSize = null, selectedColor = null) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, selectedSize, selectedColor);
       return;
     }
+    
     setCartItems(prev =>
-      prev.map(item =>
-        item._id === productId
+      prev.map(item => {
+        if (selectedSize !== null || selectedColor !== null) {
+          // Update specific variant
+          const itemKey = `${productId}-${selectedSize || 'no-size'}-${selectedColor || 'no-color'}`;
+          const existingKey = `${item._id}-${item.selectedSize || 'no-size'}-${item.selectedColor || 'no-color'}`;
+          return existingKey === itemKey
+            ? { ...item, quantity }
+            : item;
+        }
+        // Fallback: update by product ID only (for backward compatibility)
+        return item._id === productId
           ? { ...item, quantity }
-          : item
-      )
+          : item;
+      })
     );
   };
 

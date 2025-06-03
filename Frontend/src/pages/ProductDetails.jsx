@@ -31,6 +31,14 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id]);
 
+  // Scroll to top when product details page loads or product changes
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, [id]);
+
   const fetchProduct = async () => {
     try {
       setLoading(true);
@@ -60,11 +68,25 @@ const ProductDetails = () => {
       return;
     }
 
+    // Find the actual color name for the selected color
+    let selectedColorName = selectedColor;
+    if (product.colors && selectedColor) {
+      const matchingColor = product.colors.find(color => 
+        color._id === selectedColor || 
+        color.name === selectedColor ||
+        color.code === selectedColor
+      );
+      if (matchingColor) {
+        selectedColorName = matchingColor.name;
+      }
+    }
+
     // Use CartContext instead of direct localStorage manipulation
     const productWithOptions = {
       ...product,
       selectedSize,
       selectedColor,
+      selectedColorName, // Store the actual color name
       selectedQuantity: quantity
     };
 
@@ -194,13 +216,12 @@ const ProductDetails = () => {
             {/* Favorite button */}
             <button
               onClick={() => toggleFavorite(product._id)}
-              disabled={favLoading}
-              className={`btn position-absolute top-0 end-0 m-3 rounded-circle ${
-                isFavorite ? 'btn-danger' : 'btn-outline-light'
+              className={`btn position-absolute top-0 end-0 m-3 rounded-circle d-flex align-items-center justify-content-center ${
+                isFavorite ? 'btn-danger' : 'btn-light'
               }`}
-              style={{ width: '48px', height: '48px' }}
+              style={{ width: '48px', height: '48px', zIndex: 10 }}
             >
-              <i className={`bi bi-heart${isFavorite ? '-fill' : ''}`}></i>
+              <i className={`bi bi-heart${isFavorite ? '-fill text-white' : ' text-dark'} fs-4`}></i>
             </button>
           </div>
           {product.images && product.images.length > 1 && (

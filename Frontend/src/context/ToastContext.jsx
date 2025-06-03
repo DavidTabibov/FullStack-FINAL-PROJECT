@@ -12,6 +12,7 @@ export const useToast = () => {
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
+  const [fadeOutToast, setFadeOutToast] = useState(null);
 
   const addToast = useCallback((message, type = 'info', duration = 5000) => {
     const id = Date.now() + Math.random();
@@ -27,12 +28,18 @@ export const ToastProvider = ({ children }) => {
     // Auto remove toast after duration
     if (duration > 0) {
       setTimeout(() => {
-        removeToast(id);
+        // Trigger fade-out callback if it exists
+        if (fadeOutToast) {
+          fadeOutToast(id);
+        } else {
+          // Fallback to direct removal
+          removeToast(id);
+        }
       }, duration);
     }
 
     return id;
-  }, []);
+  }, [fadeOutToast]);
 
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
@@ -42,11 +49,16 @@ export const ToastProvider = ({ children }) => {
     setToasts([]);
   }, []);
 
+  const setFadeOutCallback = useCallback((callback) => {
+    setFadeOutToast(() => callback);
+  }, []);
+
   const value = {
     toasts,
     addToast,
     removeToast,
     clearAll,
+    setFadeOutCallback,
     // Convenience methods
     success: (message, duration) => addToast(message, 'success', duration),
     error: (message, duration) => addToast(message, 'error', duration),

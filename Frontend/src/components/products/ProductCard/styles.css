@@ -43,6 +43,7 @@
     opacity: 0;
     transition: all 0.3s ease;
     z-index: 2;
+    border-radius: 0;
 }
 
 .product-overlay.show {
@@ -63,6 +64,12 @@
 
 .product-overlay .btn-light {
     background: white;
+    border: 2px solid #f8f9fa;
+}
+
+.product-overlay .btn-light:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px) scale(1.05);
 }
 
 .product-overlay .btn-dark {

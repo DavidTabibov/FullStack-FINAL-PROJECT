@@ -180,7 +180,7 @@ const AdminFavoritesManagement = () => {
                     <thead className="table-light">
                       <tr>
                         <th>#</th>
-                        <th>User Name</th>
+                        <th>Full Name</th>
                         <th>Email</th>
                         <th>Favorites Count</th>
                         <th>Registration Date</th>
@@ -194,9 +194,9 @@ const AdminFavoritesManagement = () => {
                           <td>
                             <div className="d-flex align-items-center">
                               <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: '32px', height: '32px' }}>
-                                {user.name?.first?.charAt(0) || user.email.charAt(0)}
+                                {user.firstName?.charAt(0) || user.email.charAt(0)}
                               </div>
-                              {user.name ? `${user.name.first} ${user.name.last}` : 'Not Set'}
+                              {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.fullName || 'Not Set')}
                             </div>
                           </td>
                           <td className="text-muted">{user.email}</td>

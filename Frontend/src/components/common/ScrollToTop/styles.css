@@ -1,0 +1,74 @@
+.scroll-to-top {
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1050;
+  animation: fadeInUp 0.5s ease;
+  opacity: 0.9;
+  pointer-events: auto;
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+  background: linear-gradient(135deg, #0056b3, #004085);
+  opacity: 1;
+}
+
+.scroll-to-top:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .scroll-to-top {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+}
+
+/* For smaller screens */
+@media (max-width: 480px) {
+  .scroll-to-top {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .scroll-to-top {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  }
+  
+  .scroll-to-top:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+  }
+} 

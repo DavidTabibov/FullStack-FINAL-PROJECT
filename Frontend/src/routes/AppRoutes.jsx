@@ -8,6 +8,7 @@ import Products from '../pages/Products';
 import ProductDetails from '../pages/ProductDetails';
 import Cart from '../pages/Cart';
 import Checkout from '../pages/Checkout';
+import OrderSuccess from '../pages/OrderSuccess';
 import LoginPage from '../pages/Auth/LoginPage';
 import RegisterPage from '../pages/Auth/RegisterPage';
 import ForgotPasswordPage from '../pages/Auth/ForgotPasswordPage';
@@ -18,6 +19,11 @@ import ProfilePage from '../pages/Profile/ProfilePage';
 import OrdersPage from '../pages/Orders/OrdersPage';
 import WishlistPage from '../pages/Wishlist/WishlistPage';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
+
+// Policy pages
+import ReturnPolicy from '../pages/Policies/ReturnPolicy';
+import ShippingPolicy from '../pages/Policies/ShippingPolicy';
+import PaymentMethods from '../pages/Policies/PaymentMethods';
 
 const AppRoutes = () => {
   return (
@@ -30,9 +36,15 @@ const AppRoutes = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         
+        {/* Policy Pages */}
+        <Route path="/return-policy" element={<ReturnPolicy />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/payment-methods" element={<PaymentMethods />} />
+        
         {/* Shopping */}
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
         
         {/* Authentication */}
         <Route path="/login" element={<LoginPage />} />

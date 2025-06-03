@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../hooks/useAuth';
+import { toggleFavorite, getFavoriteIds } from '../../services/wishlist';
 import Loading from '../../components/common/Loading';
 import '../../styles/pages/Home.css';
 
@@ -10,14 +12,64 @@ const Home = () => {
   const { products, loading, error } = useProducts();
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
   useEffect(() => {
     if (products && products.length > 0) {
       // Get featured products (first 8)
       setFeaturedProducts(products.slice(0, 8));
+      console.log('Featured products set:', products.slice(0, 8));
     }
   }, [products]);
+
+  // Fetch user's favorite product IDs
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (isAuthenticated) {
+        try {
+          setFavoritesLoading(true);
+          const ids = await getFavoriteIds();
+          setFavoriteIds(ids);
+          console.log('Favorite IDs loaded:', ids);
+        } catch (error) {
+          console.error('Error fetching favorites:', error);
+        } finally {
+          setFavoritesLoading(false);
+        }
+      } else {
+        setFavoriteIds([]);
+        console.log('User not authenticated, favoriteIds cleared');
+      }
+    };
+
+    fetchFavorites();
+  }, [isAuthenticated]);
+
+  const handleToggleFavorite = async (productId) => {
+    if (!isAuthenticated) {
+      showToast('Please login to add items to wishlist', 'warning');
+      return;
+    }
+
+    try {
+      await toggleFavorite(productId);
+      
+      // Update local state
+      if (favoriteIds.includes(productId)) {
+        setFavoriteIds(prev => prev.filter(id => id !== productId));
+        showToast('Removed from wishlist', 'success');
+      } else {
+        setFavoriteIds(prev => [...prev, productId]);
+        showToast('Added to wishlist', 'success');
+      }
+    } catch (error) {
+      showToast('Failed to update wishlist', 'error');
+      console.error('Error toggling favorite:', error);
+    }
+  };
 
   const categories = [
     { 
@@ -164,22 +216,41 @@ const Home = () => {
                           {product.category || 'Product'}
                         </span>
                       </div>
-                      {/* Quick View on Hover */}
+
+                      {/* Quick View on Hover - Center - Appears with dark overlay */}
                       <div 
-                        className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-0 d-flex align-items-center justify-content-center opacity-0" 
-                        style={{ transition: 'all 0.3s ease' }} 
-                        onMouseEnter={(e) => {
-                          e.target.classList.remove('bg-opacity-0', 'opacity-0');
-                          e.target.classList.add('bg-opacity-50', 'opacity-100');
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.classList.add('bg-opacity-0', 'opacity-0');
-                          e.target.classList.remove('bg-opacity-50', 'opacity-100');
-                        }}
+                        className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-0 d-flex align-items-center justify-content-center opacity-0 hover-overlay"
                       >
-                        <Link to={`/products/${product._id}`} className="btn btn-light btn-sm">
-                          <i className="bi bi-eye me-1"></i>Quick View
-                        </Link>
+                        {/* Single button with both heart and view details */}
+                        <div className="d-flex gap-2 align-items-center">
+                          <button 
+                            className={`btn btn-sm rounded-circle ${favoriteIds.includes(product._id) ? 'btn-danger' : 'btn-light'}`}
+                            style={{ 
+                              width: '40px', 
+                              height: '40px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleToggleFavorite(product._id);
+                            }}
+                            disabled={favoritesLoading}
+                            title={favoriteIds.includes(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                          >
+                            <i className={`bi ${
+                              favoriteIds.includes(product._id) 
+                                ? 'bi-heart-fill' 
+                                : 'bi-heart'
+                            }`} style={{ fontSize: '16px' }}></i>
+                          </button>
+                          
+                          <Link to={`/products/${product._id}`} className="btn btn-light btn-sm">
+                            <i className="bi bi-eye me-1"></i>View Details
+                          </Link>
+                        </div>
                       </div>
                     </div>
 
@@ -208,29 +279,32 @@ const Home = () => {
                         <span className="h5 fw-bold text-primary mb-0">
                           ${product.price ? product.price.toFixed(2) : '0.00'}
                         </span>
-                        <button 
-                          className="btn btn-primary btn-sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            addToCart(product);
-                            showToast('Product added to cart!');
-                            
-                            // Button feedback
-                            const btn = e.target;
-                            const originalContent = btn.innerHTML;
-                            btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Added!';
-                            btn.classList.remove('btn-primary');
-                            btn.classList.add('btn-success');
-                            
-                            setTimeout(() => {
-                              btn.innerHTML = originalContent;
-                              btn.classList.remove('btn-success');
-                              btn.classList.add('btn-primary');
-                            }, 2000);
-                          }}
-                        >
-                          Add to Cart
-                        </button>
+                        <div className="d-flex gap-2">
+                          {/* Add to Cart Button */}
+                          <button 
+                            className="btn btn-primary btn-sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              addToCart(product);
+                              showToast('Product added to cart!');
+                              
+                              // Button feedback
+                              const btn = e.target;
+                              const originalContent = btn.innerHTML;
+                              btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Added!';
+                              btn.classList.remove('btn-primary');
+                              btn.classList.add('btn-success');
+                              
+                              setTimeout(() => {
+                                btn.innerHTML = originalContent;
+                                btn.classList.remove('btn-success');
+                                btn.classList.add('btn-primary');
+                              }, 2000);
+                            }}
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -325,6 +399,4 @@ const Home = () => {
   );
 };
 
-export default Home; / *   t r i g g e r   r e b u i l d   * / 
- 
- 
+export default Home;

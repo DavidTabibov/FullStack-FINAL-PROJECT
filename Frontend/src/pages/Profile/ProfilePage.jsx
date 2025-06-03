@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/useProfile';
 
 const ProfilePage = () => {
-    const { user, updateProfile, loading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const { updateProfile, loading: profileLoading, error: profileError } = useProfile();
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
         firstName: '',
@@ -17,15 +19,24 @@ const ProfilePage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    const loading = authLoading || profileLoading;
+
     useEffect(() => {
         if (user) {
             setFormData({
-                firstName: user.name?.first || '',
-                lastName: user.name?.last || '',
+                firstName: user.firstName || user.name?.first || '',
+                lastName: user.lastName || user.name?.last || '',
                 email: user.email || ''
             });
         }
     }, [user]);
+
+    // Clear local error when profile error changes
+    useEffect(() => {
+        if (profileError) {
+            setError(profileError);
+        }
+    }, [profileError]);
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
@@ -33,13 +44,14 @@ const ProfilePage = () => {
         setSuccess('');
 
         try {
-            await updateProfile({
-                name: {
-                    first: formData.firstName,
-                    last: formData.lastName
-                }
+            const success = await updateProfile({
+                firstName: formData.firstName,
+                lastName: formData.lastName
             });
-            setSuccess('Profile updated successfully!');
+            
+            if (success) {
+                setSuccess('Profile updated successfully!');
+            }
         } catch (err) {
             setError(err.message || 'Failed to update profile');
         }

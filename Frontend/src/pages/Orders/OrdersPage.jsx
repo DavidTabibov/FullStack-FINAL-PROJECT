@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../context/ToastContext';
-import ordersService from '../../services/orders';
 
 const OrdersPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -11,11 +10,14 @@ const OrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [error, setError] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
 
-  // Fetch user orders from backend
+  // Fetch user orders from localStorage (for demo purposes)
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!isAuthenticated) {
+      if (!isAuthenticated || !user) {
         setLoading(false);
         return;
       }
@@ -23,28 +25,37 @@ const OrdersPage = () => {
       try {
         setLoading(true);
         setError('');
-        const userOrders = await ordersService.getMyOrders();
         
-        // Transform backend orders to frontend format
-        const transformedOrders = userOrders.map(order => ({
-          id: order._id,
-          orderNumber: order._id.slice(-8).toUpperCase(),
-          date: order.createdAt,
+        // Get all orders from localStorage
+        const allOrders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+        
+        // Filter orders for current user
+        const userSpecificOrders = allOrders.filter(order => 
+          order.userId === user._id || order.userId === user.id || order.userEmail === user.email
+        );
+        
+        // Transform orders to expected format
+        const transformedOrders = userSpecificOrders.map(order => ({
+          id: order.orderId,
+          orderNumber: order.orderId.replace('ORD-', ''),
+          date: order.orderDate,
           status: order.status || 'processing',
-          total: order.totalPrice,
-          items: order.orderItems?.length || 0,
-          shippingAddress: `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.postalCode || ''}`,
-          trackingNumber: order.trackingNumber || null,
-          isPaid: order.isPaid,
-          isDelivered: order.isDelivered,
-          paidAt: order.paidAt,
-          deliveredAt: order.deliveredAt,
-          products: order.orderItems?.map(item => ({
-            id: item._id,
+          total: order.total,
+          items: order.items?.length || 0,
+          shippingAddress: `${order.shippingInfo?.address || ''}, ${order.shippingInfo?.city || ''}, ${order.shippingInfo?.postalCode || ''}`,
+          trackingNumber: null,
+          isPaid: true,
+          isDelivered: order.status === 'delivered',
+          paidAt: order.orderDate,
+          deliveredAt: order.status === 'delivered' ? order.orderDate : null,
+          isTestOrder: order.isTestOrder || false,
+          originalOrder: order, // Keep reference to original order data
+          products: order.items?.map(item => ({
+            id: item._id || item.id,
             name: item.name,
             price: item.price,
-            quantity: item.qty,
-            image: item.image || `https://picsum.photos/80/80?random=${item._id}`
+            quantity: item.quantity,
+            image: item.image || item.images?.[0] || `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=80&h=80&fit=crop&crop=center`
           })) || []
         }));
 
@@ -59,7 +70,51 @@ const OrdersPage = () => {
     };
 
     fetchOrders();
-  }, [isAuthenticated, showToast]);
+  }, [isAuthenticated, user, showToast]);
+
+  // Handler for viewing order details
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setShowDetailsModal(true);
+  };
+
+  // Handler for canceling an order
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    setCancellingOrderId(orderId);
+    try {
+      // Update order status in localStorage
+      const allOrders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+      const updatedOrders = allOrders.map(order => 
+        order.orderId === orderId 
+          ? { ...order, status: 'cancelled' }
+          : order
+      );
+      localStorage.setItem('userOrders', JSON.stringify(updatedOrders));
+
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId 
+          ? { ...order, status: 'cancelled' }
+          : order
+      ));
+
+      showToast('Order cancelled successfully', 'success');
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      showToast('Failed to cancel order', 'error');
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
+
+  // Handler for reordering
+  const handleReorder = (order) => {
+    showToast('Reorder functionality will be implemented soon', 'info');
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -305,21 +360,37 @@ const OrdersPage = () => {
                             <div className="d-flex gap-2">
                               <button 
                                 className="btn btn-outline-primary btn-sm"
-                                onClick={() => {/* Navigate to order details */}}
+                                onClick={() => handleViewDetails(order)}
                               >
                                 <i className="bi bi-eye me-1"></i>
                                 View Details
                               </button>
                               {order.status === 'delivered' && (
-                                <button className="btn btn-outline-secondary btn-sm">
+                                <button 
+                                  className="btn btn-outline-secondary btn-sm" 
+                                  onClick={() => handleReorder(order)}
+                                >
                                   <i className="bi bi-arrow-repeat me-1"></i>
                                   Reorder
                                 </button>
                               )}
                               {(order.status === 'pending' || order.status === 'processing') && (
-                                <button className="btn btn-outline-danger btn-sm">
-                                  <i className="bi bi-x-circle me-1"></i>
-                                  Cancel
+                                <button 
+                                  className="btn btn-outline-danger btn-sm" 
+                                  onClick={() => handleCancelOrder(order.id)}
+                                  disabled={cancellingOrderId === order.id}
+                                >
+                                  {cancellingOrderId === order.id ? (
+                                    <>
+                                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                      Cancelling...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="bi bi-x-circle me-1"></i>
+                                      Cancel
+                                    </>
+                                  )}
                                 </button>
                               )}
                             </div>
@@ -337,6 +408,146 @@ const OrdersPage = () => {
           )}
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {showDetailsModal && selectedOrder && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Order Details - #{selectedOrder.orderNumber}</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowDetailsModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {/* Order Summary */}
+                <div className="mb-4">
+                  <h6 className="fw-bold">Order Summary</h6>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+                      <p><strong>Date:</strong> {new Date(selectedOrder.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}</p>
+                      <p><strong>Status:</strong> {getStatusBadge(selectedOrder.status)}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>Total:</strong> ${selectedOrder.total?.toFixed(2)}</p>
+                      <p><strong>Payment:</strong> <span className="badge bg-success">Paid</span></p>
+                      {selectedOrder.isTestOrder && (
+                        <p><strong>Order Type:</strong> <span className="badge bg-info">Test Order</span></p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping Information */}
+                <div className="mb-4">
+                  <h6 className="fw-bold">Shipping Information</h6>
+                  <div className="bg-light p-3 rounded">
+                    {selectedOrder.originalOrder?.shippingInfo && (
+                      <>
+                        <p className="mb-1">
+                          <strong>{selectedOrder.originalOrder.shippingInfo.firstName} {selectedOrder.originalOrder.shippingInfo.lastName}</strong>
+                        </p>
+                        <p className="mb-1">{selectedOrder.originalOrder.shippingInfo.address}</p>
+                        <p className="mb-1">{selectedOrder.originalOrder.shippingInfo.city}, {selectedOrder.originalOrder.shippingInfo.postalCode}</p>
+                        <p className="mb-1">{selectedOrder.originalOrder.shippingInfo.country}</p>
+                        <p className="mb-1"><strong>Email:</strong> {selectedOrder.originalOrder.shippingInfo.email}</p>
+                        <p className="mb-0"><strong>Phone:</strong> {selectedOrder.originalOrder.shippingInfo.phone}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <div className="mb-4">
+                  <h6 className="fw-bold">Order Items</h6>
+                  <div className="table-responsive">
+                    <table className="table table-borderless">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Quantity</th>
+                          <th className="text-end">Price</th>
+                          <th className="text-end">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedOrder.products?.map(product => (
+                          <tr key={product.id}>
+                            <td>
+                              <div className="d-flex align-items-center">
+                                <img 
+                                  src={product.image} 
+                                  alt={product.name}
+                                  className="rounded me-3"
+                                  style={{width: '50px', height: '50px', objectFit: 'cover'}}
+                                />
+                                <div>
+                                  <h6 className="mb-0">{product.name}</h6>
+                                </div>
+                              </div>
+                            </td>
+                            <td>{product.quantity}</td>
+                            <td className="text-end">${product.price?.toFixed(2)}</td>
+                            <td className="text-end"><strong>${(product.price * product.quantity).toFixed(2)}</strong></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="border-top">
+                        <tr>
+                          <td colSpan="3" className="text-end"><strong>Total:</strong></td>
+                          <td className="text-end"><strong>${selectedOrder.total?.toFixed(2)}</strong></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                {selectedOrder.originalOrder?.paymentInfo && (
+                  <div className="mb-4">
+                    <h6 className="fw-bold">Payment Information</h6>
+                    <div className="bg-light p-3 rounded">
+                      <p className="mb-1"><strong>Payment Method:</strong> {selectedOrder.originalOrder.paymentInfo.cardType}</p>
+                      <p className="mb-0"><strong>Card:</strong> ****{selectedOrder.originalOrder.paymentInfo.cardNumber}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Close
+                </button>
+                {(selectedOrder.status === 'pending' || selectedOrder.status === 'processing') && (
+                  <button 
+                    type="button" 
+                    className="btn btn-danger" 
+                    onClick={() => {
+                      handleCancelOrder(selectedOrder.id);
+                      setShowDetailsModal(false);
+                    }}
+                  >
+                    Cancel Order
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

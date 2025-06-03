@@ -35,11 +35,53 @@ export const getCategories = async () => {
   }
 };
 
+// Admin: Create new product
+export const createProduct = async (productData, token) => {
+  try {
+    const response = await api.post("/products", productData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Create Product API Error:', error);
+    throw new Error(error.response?.data?.message || "Failed to create product");
+  }
+};
+
+// Admin: Update product
+export const updateProduct = async (id, productData, token) => {
+  try {
+    const response = await api.put(`/products/${id}`, productData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Update Product API Error:', error);
+    throw new Error(error.response?.data?.message || "Failed to update product");
+  }
+};
+
+// Admin: Delete product
+export const deleteProduct = async (id, token) => {
+  try {
+    const response = await api.delete(`/products/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Delete Product API Error:', error);
+    throw new Error(error.response?.data?.message || "Failed to delete product");
+  }
+};
+
 // Legacy export for backward compatibility
 const productsService = {
   getProducts: getAllProducts,
   getProduct,
-  getCategories
+  getCategories,
+  createProduct,
+  updateProduct,
+  deleteProduct
 };
 
 export default productsService;

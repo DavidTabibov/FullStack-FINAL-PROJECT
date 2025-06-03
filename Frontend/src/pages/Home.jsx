@@ -4,7 +4,10 @@ import OptimizedImage from '../components/common/OptimizedImage';
 import Loading from '../components/common/Loading';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../hooks/useAuth';
+import { toggleFavorite, getFavoriteIds } from '../services/wishlist';
 import api from '../services/api';
+import '../styles/pages/Home.css';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -13,18 +16,23 @@ const Home = () => {
   const [error, setError] = useState(null);
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get('/products');
-        const data = response.data;
-        const productArray = Array.isArray(data) ? data : (data.products || []);
-        setProducts(productArray.slice(0, 3));
+        // Use the dedicated featured products endpoint
+        const response = await api.get('/products/featured');
+        const productArray = Array.isArray(response.data) ? response.data : [];
+        
+        // Take up to 6 featured products for display
+        setProducts(productArray.slice(0, 6));
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching featured products:', error);
         setError('Unable to load products at the moment.');
         // Set fallback products for demo purposes
         setProducts([]);
@@ -35,6 +43,27 @@ const Home = () => {
 
     fetchProducts();
   }, []);
+
+  // Fetch user's favorite product IDs
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (isAuthenticated) {
+        try {
+          setFavoritesLoading(true);
+          const ids = await getFavoriteIds();
+          setFavoriteIds(ids);
+        } catch (error) {
+          console.error('Error fetching favorites:', error);
+        } finally {
+          setFavoritesLoading(false);
+        }
+      } else {
+        setFavoriteIds([]);
+      }
+    };
+
+    fetchFavorites();
+  }, [isAuthenticated]);
 
   const categories = [
     {
@@ -89,9 +118,37 @@ const Home = () => {
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
-    console.log('Newsletter signup:', email);
+    if (!email) {
+      showToast('Please enter a valid email address', 'warning');
+      return;
+    }
+    
+    // Simulate newsletter signup (replace with actual API call later)
+    showToast('Thank you for subscribing to our newsletter!', 'success');
     setEmail('');
-    // Add success feedback here
+  };
+
+  const handleToggleFavorite = async (productId) => {
+    if (!isAuthenticated) {
+      showToast('Please login to add items to wishlist', 'warning');
+      return;
+    }
+
+    try {
+      await toggleFavorite(productId);
+      
+      // Update local state
+      if (favoriteIds.includes(productId)) {
+        setFavoriteIds(prev => prev.filter(id => id !== productId));
+        showToast('Removed from wishlist', 'success');
+      } else {
+        setFavoriteIds(prev => [...prev, productId]);
+        showToast('Added to wishlist', 'success');
+      }
+    } catch (error) {
+      showToast('Failed to update wishlist', 'error');
+      console.error('Error toggling favorite:', error);
+    }
   };
 
   return (
@@ -275,13 +332,17 @@ const Home = () => {
                             </div>
                           </div>
                         )}
-                        {/* Category Badge */}
+                        {/* Category Badge and Product Status Badges */}
                         <div className="position-absolute top-0 start-0 m-2">
                           {product.category && (
-                            <span className="badge bg-primary text-white fw-semibold px-2 py-1 rounded-pill text-uppercase small">
+                            <span className="badge bg-primary text-white fw-semibold px-2 py-1 rounded-pill text-uppercase small me-2">
                               {product.category}
                             </span>
                           )}
+F                          {/* For featured products section, only show Featured badge */}
+                          <span className="badge bg-warning text-white fw-semibold px-2 py-1 rounded-pill text-uppercase small">
+                            Featured
+                          </span>
                         </div>
                         {/* Hover overlay for quick view */}
                         <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-0 d-flex align-items-center justify-content-center opacity-0 transition-all" 
@@ -294,9 +355,37 @@ const Home = () => {
                                e.currentTarget.classList.add('bg-opacity-0', 'opacity-0');
                                e.currentTarget.classList.remove('bg-opacity-50', 'opacity-100');
                              }}>
-                          <span className="btn btn-light btn-sm">
-                            <i className="bi bi-eye me-1"></i>View Details
-                          </span>
+                          <div className="d-flex gap-2 align-items-center">
+                            {/* Wishlist Heart Button */}
+                            <button 
+                              className={`btn btn-sm rounded-circle ${favoriteIds.includes(product._id) ? 'btn-danger' : 'btn-light'}`}
+                              style={{ 
+                                width: '40px', 
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleToggleFavorite(product._id);
+                              }}
+                              disabled={favoritesLoading}
+                              title={favoriteIds.includes(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                            >
+                              <i className={`bi ${
+                                favoriteIds.includes(product._id) 
+                                  ? 'bi-heart-fill' 
+                                  : 'bi-heart'
+                              }`} style={{ fontSize: '16px' }}></i>
+                            </button>
+                            
+                            {/* View Details Button */}
+                            <span className="btn btn-light btn-sm">
+                              <i className="bi bi-eye me-1"></i>View Details
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </Link>
@@ -315,9 +404,20 @@ const Home = () => {
                         {product.description || 'Premium quality fashion piece crafted with attention to detail.'}
                       </p>
                       <div className="d-flex justify-content-between align-items-center mt-auto">
-                        <span className="h5 fw-bold text-primary mb-0">
-                          ${product.price ? product.price.toFixed(2) : '0.00'}
-                        </span>
+                        {product.isSale && product.salePrice && product.salePrice < product.price ? (
+                          <div className="d-flex align-items-center">
+                            <span className="h5 fw-bold text-danger mb-0 me-2">
+                              ${product.salePrice.toFixed(2)}
+                            </span>
+                            <small className="text-muted text-decoration-line-through">
+                              ${product.price.toFixed(2)}
+                            </small>
+                          </div>
+                        ) : (
+                          <span className="h5 fw-bold text-primary mb-0">
+                            ${product.price ? product.price.toFixed(2) : '0.00'}
+                          </span>
+                        )}
                         <button 
                           className="btn btn-primary btn-sm"
                           onClick={(e) => {

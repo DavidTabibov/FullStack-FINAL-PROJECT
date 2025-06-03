@@ -6,6 +6,8 @@ import { CartProvider } from "./context/CartContext";
 import { ToastProvider } from "./context/ToastContext";
 import AppRoutes from "./routes/AppRoutes";
 import ToastContainer from "./components/common/Toast/ToastContainer";
+import ScrollToTop from "./components/common/ScrollToTop";
+import ScrollToTopOnRouteChange from "./components/common/ScrollToTopOnRouteChange";
 
 function App() {
   return (
@@ -19,8 +21,10 @@ function App() {
                 v7_relativeSplatPath: true
               }}
             >
+              <ScrollToTopOnRouteChange />
               <AppRoutes />
               <ToastContainer />
+              <ScrollToTop />
             </Router>
           </ToastProvider>
         </CartProvider>

@@ -135,7 +135,7 @@ const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
   if (user) {
-    await user.remove();
+    await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'User removed' });
   } else {
     res.status(404);
@@ -395,6 +395,23 @@ const removeFromFavorites = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Clear all favorites
+// @route   DELETE /api/users/favorites
+// @access  Private
+const clearAllFavorites = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.wishlist = [];
+    await user.save();
+
+    res.json({ message: 'All favorites cleared successfully' });
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
 // @desc    Get favorites analytics for admin
 // @route   GET /api/users/admin/favorites-analytics
 // @access  Private/Admin
@@ -420,7 +437,16 @@ const getFavoritesAnalytics = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getUsersFavoritesStats = asyncHandler(async (req, res) => {
   const userStats = await User.aggregate([
-    { $project: { name: 1, email: 1, favoritesCount: { $size: '$wishlist' }, createdAt: 1 } },
+    { 
+      $project: { 
+        firstName: 1,
+        lastName: 1,
+        email: 1, 
+        favoritesCount: { $size: '$wishlist' }, 
+        createdAt: 1,
+        fullName: { $concat: ['$firstName', ' ', '$lastName'] }
+      } 
+    },
     { $sort: { favoritesCount: -1 } },
     { $limit: 50 }
   ]);
@@ -447,6 +473,7 @@ export {
   toggleFavorites,
   addToFavorites,
   removeFromFavorites,
+  clearAllFavorites,
   getFavoritesAnalytics,
   getUsersFavoritesStats
 };

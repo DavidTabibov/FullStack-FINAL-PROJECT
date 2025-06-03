@@ -23,12 +23,12 @@ const Cart = () => {
     return subtotal + tax;
   };
 
-  const handleRemoveItem = (productId) => {
-    removeFromCart(productId);
+  const handleRemoveItem = (item) => {
+    removeFromCart(item._id, item.selectedSize, item.selectedColor);
   };
 
-  const handleUpdateQuantity = (productId, newQuantity) => {
-    updateQuantity(productId, newQuantity);
+  const handleUpdateQuantity = (item, newQuantity) => {
+    updateQuantity(item._id, newQuantity, item.selectedSize, item.selectedColor);
   };
 
   const handleClearCart = () => {
@@ -51,10 +51,38 @@ const Cart = () => {
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
-      alert('Your cart is empty');
+      showToast('Your cart is empty', 'warning');
       return;
     }
     navigate('/checkout');
+  };
+
+  // Function to get the actual color name from color data
+  const getColorName = (item) => {
+    // If selectedColor is already a name/string (not an ID), return it
+    if (item.selectedColor && typeof item.selectedColor === 'string' && item.selectedColor.length < 10) {
+      return item.selectedColor;
+    }
+    
+    // If the item has colors array and selectedColor is an ID, find the matching color
+    if (item.colors && item.selectedColor) {
+      const matchingColor = item.colors.find(color => 
+        color._id === item.selectedColor || 
+        color.name === item.selectedColor ||
+        color.code === item.selectedColor
+      );
+      if (matchingColor) {
+        return matchingColor.name;
+      }
+    }
+    
+    // If selectedColorName is available (from product details), use it
+    if (item.selectedColorName) {
+      return item.selectedColorName;
+    }
+    
+    // Fallback
+    return item.selectedColor || 'Default';
   };
 
   if (cartItems.length === 0) {
@@ -99,8 +127,12 @@ const Cart = () => {
             </div>
             
             <div className="card-body p-0">
-              {cartItems.map((item, index) => (
-                <div key={item._id || index} className="d-flex align-items-start p-4 border-bottom">
+              {cartItems.map((item, index) => {
+                // Create a unique key for each cart item including variants
+                const itemKey = `${item._id}-${item.selectedSize || 'no-size'}-${item.selectedColor || 'no-color'}`;
+                
+                return (
+                <div key={itemKey} className="d-flex align-items-start p-4 border-bottom">
                   {/* Product Image */}
                   <div className="flex-shrink-0 me-3">
                     <button
@@ -127,9 +159,18 @@ const Cart = () => {
                       <h3 className="h6 fw-semibold mb-1 text-truncate text-dark">{item.name}</h3>
                     </button>
                     <div className="small text-muted mb-1">
-                      {item.selectedSize && <span>Size: {item.selectedSize}</span>}
-                      {item.selectedSize && item.selectedColor && <span className="mx-2">•</span>}
-                      {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                      {item.selectedSize && (
+                        <span className="badge bg-light text-dark me-2">
+                          <i className="bi bi-rulers me-1"></i>
+                          Size: {item.selectedSize}
+                        </span>
+                      )}
+                      {item.selectedColor && (
+                        <span className="badge bg-light text-dark">
+                          <i className="bi bi-palette me-1"></i>
+                          Color: {getColorName(item)}
+                        </span>
+                      )}
                     </div>
                     <p className="h6 fw-bold text-primary mb-0">${item.price}</p>
                   </div>
@@ -137,7 +178,7 @@ const Cart = () => {
                   {/* Quantity Controls */}
                   <div className="d-flex align-items-center me-3">
                     <button
-                      onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}
+                      onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
                       className="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center"
                       style={{ width: '32px', height: '32px' }}
                     >
@@ -147,7 +188,7 @@ const Cart = () => {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}
+                      onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
                       className="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center"
                       style={{ width: '32px', height: '32px' }}
                     >
@@ -162,14 +203,15 @@ const Cart = () => {
 
                   {/* Remove Button */}
                   <button
-                    onClick={() => handleRemoveItem(item._id)}
+                    onClick={() => handleRemoveItem(item)}
                     className="btn btn-outline-danger btn-sm"
                     title="Remove item"
                   >
                     <i className="bi bi-trash"></i>
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

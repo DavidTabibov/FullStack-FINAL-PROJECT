@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useToast } from '../../context/ToastContext';
 import './Footer.css';
 
 const Footer = () => {
     const [email, setEmail] = useState('');
     const [isNewsletterLoading, setIsNewsletterLoading] = useState(false);
+    const { showToast } = useToast();
 
     const handleNewsletterSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!email) {
+            showToast('Please enter a valid email address', 'warning');
+            return;
+        }
+        
         setIsNewsletterLoading(true);
         
-        // Simulate newsletter signup
+        // Simulate newsletter signup (replace with actual API call later)
         setTimeout(() => {
             setIsNewsletterLoading(false);
             setEmail('');
-            alert('Thank you for subscribing to our newsletter!');
+            showToast('Thank you for subscribing to our newsletter!', 'success');
         }, 1500);
     };
 
@@ -191,24 +199,24 @@ const Footer = () => {
                             <h3 className="fw-bold mb-3 text-warning" style={{fontSize: '1rem'}}>Customer Service</h3>
                             <ul className="list-unstyled">
                                 <li className="mb-2">
-                                    <a href="#" className="footer-link text-light text-decoration-none">
+                                    <Link to="/return-policy" className="footer-link text-light text-decoration-none">
                                         <i className="bi bi-chevron-right me-2 small"></i>Return Policy
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li className="mb-2">
-                                    <a href="#" className="footer-link text-light text-decoration-none">
+                                    <Link to="/shipping-policy" className="footer-link text-light text-decoration-none">
                                         <i className="bi bi-chevron-right me-2 small"></i>Shipping
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li className="mb-2">
-                                    <a href="#" className="footer-link text-light text-decoration-none">
+                                    <Link to="/payment-methods" className="footer-link text-light text-decoration-none">
                                         <i className="bi bi-chevron-right me-2 small"></i>Payment Methods
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li className="mb-2">
-                                    <a href="#" className="footer-link text-light text-decoration-none">
+                                    <Link to="/contact#faq" className="footer-link text-light text-decoration-none">
                                         <i className="bi bi-chevron-right me-2 small"></i>FAQ
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>

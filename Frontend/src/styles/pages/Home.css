@@ -418,38 +418,55 @@
 
 /* Featured Products Compact Design */
 .featured-products .card-hover {
-  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 1rem !important;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: none !important;
+  height: 100%;
 }
 
-.featured-products .card-hover .card-body {
-  display: flex;
-  flex-direction: column;
-  height: auto;
-}
-
-.featured-products .card-hover .card-body .mt-auto {
-  margin-top: auto !important;
-}
-
-.featured-products .card-hover:hover .card-body {
-  background: rgba(99, 102, 241, 0.02);
-}
-
-/* Compact card image styles */
-.featured-products .card-hover img {
-  transition: transform 0.4s ease, opacity 0.3s ease;
+.featured-products .card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
 }
 
 .featured-products .card-hover:hover img {
   transform: scale(1.05);
 }
 
+.featured-products .card-hover .card-body {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  transition: all 0.3s ease;
+}
+
+.featured-products .card-hover .card-body .mt-auto {
+  margin-top: auto !important;
+  transition: transform 0.3s ease;
+}
+
+.featured-products .card-hover:hover .card-body {
+  background: rgba(99, 102, 241, 0.02);
+  transform: translateY(-2px);
+}
+
+.featured-products .card-hover img {
+  transition: transform 0.3s ease;
+}
+
+/* Simple hover overlay for featured products */
+.featured-products .card-hover:hover .hover-overlay {
+  opacity: 1 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
 /* Badge positioning for compact cards */
 .featured-products .badge {
   font-size: 0.7rem;
   letter-spacing: 0.5px;
+  z-index: 10;
+  position: relative;
 }
 
 /* Button improvements for compact cards */

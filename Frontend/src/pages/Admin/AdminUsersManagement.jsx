@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useToast } from '../../context/ToastContext';
 import axios from 'axios';
 
 const AdminUsersManagement = () => {
@@ -16,6 +17,7 @@ const AdminUsersManagement = () => {
     role: 'user'
   });
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchUsers();
@@ -78,10 +80,10 @@ const AdminUsersManagement = () => {
       
       setShowEditModal(false);
       fetchUsers(); // Refresh users list
-      alert('User updated successfully');
+      showToast('User updated successfully', 'success');
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error updating user');
+      showToast('Error updating user. Please try again.', 'error');
     }
   };
 
@@ -94,10 +96,10 @@ const AdminUsersManagement = () => {
       
       setShowDeleteModal(false);
       fetchUsers(); // Refresh users list
-      alert('User deleted successfully');
+      showToast('User deleted successfully', 'success');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user');
+      showToast('Error deleting user. Please try again.', 'error');
     }
   };
 

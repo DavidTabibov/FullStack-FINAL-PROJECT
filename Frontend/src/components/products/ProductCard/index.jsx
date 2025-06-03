@@ -32,7 +32,17 @@ const ProductCard = ({
         e.preventDefault();
         e.stopPropagation();
         if (onAddToCart) {
-            onAddToCart(product);
+            // Add default size and color if available
+            const productWithDefaults = {
+                ...product,
+                selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
+                selectedColor: product.colors && product.colors.length > 0 ? 
+                    (product.colors[0]._id || product.colors[0].name) : null,
+                selectedColorName: product.colors && product.colors.length > 0 ? 
+                    product.colors[0].name : null,
+                selectedQuantity: 1
+            };
+            onAddToCart(productWithDefaults);
         }
     };
 
@@ -47,8 +57,8 @@ const ProductCard = ({
     // Safe access to product properties
     const safeProduct = {
         ...product,
-        discount: product.discount || 0,
         isNew: product.isNew || false,
+        isSale: product.isSale || false,
         rating: product.rating || 0,
         reviewCount: product.reviewCount || 0,
         images: product.images || [],
@@ -81,17 +91,17 @@ const ProductCard = ({
                         
                         {/* Overlay on hover */}
                         <div className={`product-overlay ${isHovered ? 'show' : ''}`}>
-                            <div className="d-flex gap-2 justify-content-center">
+                            <div className="d-flex gap-2 justify-content-center align-items-center">
                                 <button 
                                     className="btn btn-light btn-sm rounded-circle d-flex align-items-center justify-content-center"
-                                    style={{ width: '36px', height: '36px' }}
+                                    style={{ width: '40px', height: '40px' }}
                                     onClick={handleToggleFavorite}
                                     title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                 >
-                                    <i className={`bi ${isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart'} small`}></i>
+                                    <i className={`bi ${isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart text-dark'} fs-5`}></i>
                                 </button>
                                 <button 
-                                    className="btn btn-dark btn-sm px-2 py-1"
+                                    className="btn btn-dark btn-sm px-3 py-2"
                                     onClick={handleAddToCart}
                                     style={{ fontSize: '0.85rem' }}
                                 >
@@ -104,10 +114,10 @@ const ProductCard = ({
                         {/* Product Badges */}
                         <div className="position-absolute top-0 start-0 p-2">
                             {safeProduct.isNew && (
-                                <span className="badge bg-success rounded-pill" style={{ fontSize: '0.7rem' }}>New</span>
+                                <span className="badge bg-success rounded-pill me-1" style={{ fontSize: '0.7rem' }}>New</span>
                             )}
-                            {safeProduct.discount > 0 && (
-                                <span className="badge bg-danger rounded-pill ms-1" style={{ fontSize: '0.7rem' }}>-{safeProduct.discount}%</span>
+                            {safeProduct.isSale && (
+                                <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.7rem' }}>Sale</span>
                             )}
                         </div>
                     </div>
@@ -149,10 +159,10 @@ const ProductCard = ({
 
                         {/* Price */}
                         <div className="mt-auto">
-                            {safeProduct.discount > 0 ? (
+                            {safeProduct.isSale && safeProduct.salePrice && safeProduct.salePrice < safeProduct.price ? (
                                 <div className="d-flex align-items-center">
-                                    <span className="h6 mb-0 text-primary fw-bold me-2" style={{ fontSize: '1rem' }}>
-                                        {formatPrice(safeProduct.price * (1 - safeProduct.discount / 100))}
+                                    <span className="h6 mb-0 text-danger fw-bold me-2" style={{ fontSize: '1rem' }}>
+                                        {formatPrice(safeProduct.salePrice)}
                                     </span>
                                     <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.8rem' }}>
                                         {formatPrice(safeProduct.price)}
@@ -177,8 +187,9 @@ ProductCard.propTypes = {
         name: PropTypes.string.isRequired,
         brand: PropTypes.string,
         price: PropTypes.number.isRequired,
-        discount: PropTypes.number,
+        salePrice: PropTypes.number,
         isNew: PropTypes.bool,
+        isSale: PropTypes.bool,
         rating: PropTypes.number,
         reviewCount: PropTypes.number,
         images: PropTypes.arrayOf(PropTypes.string),
