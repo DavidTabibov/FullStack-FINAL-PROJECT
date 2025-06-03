@@ -84,54 +84,54 @@ const Checkout = () => {
     
     // Strict validation for shipping information
     if (!shippingInfo.firstName.trim()) {
-      showToast('Please enter your first name', 'warning');
+      showToast('🚨 First name is required to process your order', 'warning');
       setValidationErrors(prev => ({...prev, firstName: true}));
       return;
     }
     
     if (!shippingInfo.lastName.trim()) {
-      showToast('Please enter your last name', 'warning');
+      showToast('🚨 Last name is required to process your order', 'warning');
       setValidationErrors(prev => ({...prev, lastName: true}));
       return;
     }
     
     if (!shippingInfo.email.trim() || !shippingInfo.email.includes('@')) {
-      showToast('Please enter a valid email address', 'warning');
+      showToast('📧 Please enter a valid email address for order confirmation', 'warning');
       setValidationErrors(prev => ({...prev, email: true}));
       return;
     }
     
     if (!shippingInfo.phone.trim() || shippingInfo.phone.length < 10) {
-      showToast('Please enter a valid phone number (at least 10 digits)', 'warning');
+      showToast('📱 Please enter a valid phone number (minimum 10 digits) for delivery updates', 'warning');
       setValidationErrors(prev => ({...prev, phone: true}));
       return;
     }
     
     if (!shippingInfo.address.trim() || shippingInfo.address.length < 5) {
-      showToast('Please enter a complete address (at least 5 characters)', 'warning');
+      showToast('🏠 Please enter a complete shipping address (minimum 5 characters)', 'warning');
       setValidationErrors(prev => ({...prev, address: true}));
       return;
     }
     
     if (!shippingInfo.city.trim()) {
-      showToast('Please enter your city', 'warning');
+      showToast('🏙️ City is required for accurate delivery', 'warning');
       setValidationErrors(prev => ({...prev, city: true}));
       return;
     }
     
     if (!shippingInfo.postalCode.trim() || shippingInfo.postalCode.length < 3) {
-      showToast('Please enter a valid postal code', 'warning');
+      showToast('📮 Please enter a valid postal/ZIP code for delivery', 'warning');
       setValidationErrors(prev => ({...prev, postalCode: true}));
       return;
     }
     
     if (!shippingInfo.country.trim()) {
-      showToast('Please select your country', 'warning');
+      showToast('🌍 Please select your country for shipping calculation', 'warning');
       setValidationErrors(prev => ({...prev, country: true}));
       return;
     }
     
-    showToast('Shipping information validated successfully!', 'success');
+    showToast('✅ Shipping information saved! Proceeding to payment...', 'success');
     setCurrentStep(2);
   };
 
@@ -140,22 +140,22 @@ const Checkout = () => {
     
     // Strict validation for payment information
     if (!paymentInfo.cardNumber.trim()) {
-      showToast('Please enter your card number', 'warning');
+      showToast('💳 Credit card number is required to complete your purchase', 'warning');
       return;
     }
     
     if (!paymentInfo.cardName.trim()) {
-      showToast('Please enter the cardholder name', 'warning');
+      showToast('👤 Cardholder name is required as it appears on your card', 'warning');
       return;
     }
     
     if (!paymentInfo.expiryDate.trim()) {
-      showToast('Please enter the expiry date', 'warning');
+      showToast('📅 Card expiry date is required (MM/YY format)', 'warning');
       return;
     }
     
     if (!paymentInfo.cvv.trim()) {
-      showToast('Please enter the CVV', 'warning');
+      showToast('🔒 CVV/CVC security code is required (3-4 digits on your card)', 'warning');
       return;
     }
     
@@ -169,58 +169,39 @@ const Checkout = () => {
       if (isTestCard) {
         // Validate test card details
         if (paymentInfo.expiryDate !== '12/28' || paymentInfo.cvv !== '123') {
-          showToast('Invalid test card details. Please use: Expiry: 12/28, CVV: 123', 'error');
+          showToast('⚠️ Demo Mode: Please use test card details - Expiry: 12/28, CVV: 123', 'error');
           return;
         }
         // Simulate test card processing - always succeeds
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        showToast('✅ Test payment processed successfully with infinite funds!', 'success');
-        console.log('✅ Test payment processed successfully with infinite funds card!');
+        setTimeout(() => {
+          setLoading(false);
+          showToast('🎉 Payment successful! Order confirmed with test payment system', 'success');
+          navigate('/order-success', { 
+            state: { 
+              orderData: {
+                orderId: 'ORD-' + Date.now(),
+                email: shippingInfo.email,
+                total: calculateTotal(),
+                items: cartItems,
+                shippingAddress: shippingInfo,
+                paymentInfo: {
+                  cardNumber: paymentInfo.cardNumber.slice(-4),
+                  cardType: 'Test Card (Infinite Funds)'
+                }
+              }
+            } 
+          });
+        }, 2000);
       } else {
         // For non-test cards, simulate realistic payment processing
         await new Promise(resolve => setTimeout(resolve, 2000));
         // High chance of failure for non-test cards (simulating real-world scenario)
-        showToast('Payment declined. Please use the test credit card for demo purposes.', 'error');
+        showToast('❌ Demo Mode: Payment declined. Please use test card 4532-1234-5678-9012 for demonstration', 'error');
         return;
       }
       
-      // Create order object for success page
-      const orderData = {
-        orderId: 'ORD-' + Date.now(),
-        userId: user?._id || user?.id,
-        userEmail: user?.email,
-        total: calculateTotal(),
-        items: cartItems,
-        shippingInfo,
-        paymentInfo: {
-          cardNumber: paymentInfo.cardNumber.slice(-4),
-          cardType: isTestCard ? 'Test Card (Infinite Funds)' : 'Credit Card'
-        },
-        orderDate: new Date().toISOString(),
-        isTestOrder: isTestCard,
-        status: 'processing'
-      };
-      
-      // Save order to localStorage for Orders page
-      const existingOrders = JSON.parse(localStorage.getItem('userOrders') || '[]');
-      existingOrders.push(orderData);
-      localStorage.setItem('userOrders', JSON.stringify(existingOrders));
-      
-      // Clear cart after successful order
-      localStorage.removeItem('cart');
-      
-      showToast('Order placed successfully! Redirecting...', 'success');
-      
-      // Small delay before redirect to show success message
-      setTimeout(() => {
-        navigate('/order-success', { 
-          state: orderData
-        });
-      }, 1500);
-      
     } catch (error) {
-      console.error('Payment error:', error);
-      showToast(`Payment failed: ${error.message}`, 'error');
+      showToast(`💳 Payment processing failed: ${error.message}. Please try again or contact support.`, 'error');
     } finally {
       setLoading(false);
     }

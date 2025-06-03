@@ -57,13 +57,28 @@ const Products = () => {
         // Fetch with larger limit to get all products
         const response = await api.get('/products?limit=1000');
         const data = response.data;
-        const productArray = Array.isArray(data) ? data : (data.products || []);
         
-        console.log('Fetched products:', productArray.length); // Debug log
-        setProducts(productArray);
-        setFilteredProducts(productArray);
+        // Handle different response structures
+        let productArray = [];
+        if (data?.products && Array.isArray(data.products)) {
+          // Backend returns {products: [...]}
+          productArray = data.products;
+        } else if (Array.isArray(data)) {
+          // Backend returns [...] directly
+          productArray = data;
+        } else if (data && typeof data === 'object') {
+          // Backend returns object with products
+          productArray = Object.values(data);
+        }
+
+        if (productArray.length > 0) {
+          setProducts(productArray);
+          setFilteredProducts(productArray);
+        } else {
+          setProducts([]);
+          setFilteredProducts([]);
+        }
       } catch (error) {
-        console.error('Error fetching products:', error);
         setError('Unable to load products at the moment.');
         setProducts([]);
         setFilteredProducts([]);
@@ -82,7 +97,6 @@ const Products = () => {
         const ids = await getFavoriteIds();
         setFavoriteIds(ids);
       } catch (error) {
-        console.error('Error fetching favorites:', error);
         setFavoriteIds([]);
       }
     };
@@ -178,12 +192,12 @@ const Products = () => {
 
   const handleAddToCart = (productData) => {
     addToCart(productData);
-    showToast('Product added to cart!');
+    showToast(`🛒 "${productData.name}" added to your cart successfully!`, 'success');
   };
 
   const handleToggleFavorite = async (productId) => {
     if (!isAuthenticated) {
-      showToast('Please login to manage favorites', 'error');
+      showToast('🔐 Please sign in to save items to your favorites list', 'warning');
       return;
     }
     
@@ -202,13 +216,12 @@ const Products = () => {
       
       // Move toast calls outside setState to prevent render warning
       if (isCurrentlyFavorite) {
-        showToast('Removed from favorites', 'success');
+        showToast('💔 Item removed from your favorites', 'success');
       } else {
-        showToast('Added to favorites', 'success');
+        showToast('❤️ Item saved to your favorites!', 'success');
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
-      showToast('Error updating favorites. Please try again.', 'error');
+      showToast('⚠️ Unable to update favorites. Please check your connection and try again.', 'error');
     }
   };
 
@@ -258,10 +271,10 @@ const Products = () => {
       </section>
 
       {/* Filters Section */}
-      <section className="py-4 bg-white shadow-sm sticky-top" style={{zIndex: 10}}>
+      <section className="py-3 py-md-4 bg-white shadow-sm sticky-top" style={{zIndex: 10}}>
         <div className="container">
-          <div className="row align-items-center g-3">
-            <div className="col-md-4">
+          <div className="row align-items-center g-2 g-md-3">
+            <div className="col-12 col-md-4">
               <input
                 type="search"
                 className="form-control border-2"
@@ -271,7 +284,7 @@ const Products = () => {
                 style={{borderRadius: '50px'}}
               />
             </div>
-            <div className="col-md-3">
+            <div className="col-6 col-md-3">
               <select
                 className="form-select border-2"
                 value={selectedCategory}
@@ -285,7 +298,7 @@ const Products = () => {
                 ))}
               </select>
             </div>
-            <div className="col-md-3">
+            <div className="col-6 col-md-3">
               <select
                 className="form-select border-2"
                 value={sortBy}
@@ -299,8 +312,8 @@ const Products = () => {
                 ))}
               </select>
             </div>
-            <div className="col-md-2">
-              <div className="text-muted text-center">
+            <div className="col-12 col-md-2 text-center">
+              <div className="text-muted">
                 <small>
                   {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''}
                 </small>
@@ -334,9 +347,9 @@ const Products = () => {
           ) : (
             <>
               {/* Products Grid */}
-              <div className="row g-4">
+              <div className="row g-3 g-md-4">
                 {currentProducts.map((product) => (
-                  <div key={product._id} className="col-lg-3 col-md-4 col-sm-6">
+                  <div key={product._id} className="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
                     <ProductCard 
                       product={product}
                       onAddToCart={handleAddToCart}

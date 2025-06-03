@@ -1,6 +1,10 @@
 .product-card-wrapper {
     height: 100%;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 450px;
 }
 
 .product-card {
@@ -10,6 +14,11 @@
     border: none !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
     background: white;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100%;
+    max-width: 100%;
 }
 
 .product-card:hover {
@@ -23,6 +32,8 @@
     display: block;
     width: 100%;
     height: 100%;
+    object-fit: cover;
+    object-position: center;
 }
 
 .product-card:hover .product-image {
@@ -41,13 +52,17 @@
     align-items: center;
     justify-content: center;
     opacity: 0;
+    visibility: hidden;
     transition: all 0.3s ease;
-    z-index: 2;
+    z-index: 10;
     border-radius: 0;
+    pointer-events: none;
 }
 
 .product-overlay.show {
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .product-overlay .btn {
@@ -55,6 +70,9 @@
     font-weight: 600;
     border: none;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+    position: relative;
+    z-index: 11;
 }
 
 .product-overlay .btn:hover {
@@ -82,10 +100,12 @@
 
 /* Card Body */
 .card-body {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
     height: 100%;
-    padding: 1.5rem !important;
+    padding: 1.25rem !important;
+    justify-content: space-between;
 }
 
 .card-title {
@@ -93,6 +113,7 @@
     color: #1f2937;
     line-height: 1.4;
     margin-bottom: 1rem !important;
+    flex-shrink: 0;
 }
 
 /* Badges */
@@ -136,31 +157,187 @@
     margin-bottom: 0.5rem !important;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .product-card {
-        border-radius: 0.75rem !important;
-    }
-    
-    .product-image {
-        height: 240px !important;
+/* Responsive Design - Main breakpoints */
+@media (max-width: 1200px) {
+    .product-card-wrapper {
+        min-height: 420px;
     }
     
     .card-body {
-        padding: 1.25rem !important;
+        padding: 1.1rem !important;
     }
     
     .card-title {
         font-size: 0.95rem !important;
-        height: 2.6rem !important;
+        height: 2.5rem !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .product-card-wrapper {
+        min-height: 400px;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .card-title {
+        font-size: 0.9rem !important;
+        height: 2.4rem !important;
+    }
+    
+    .product-image {
+        height: 200px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-card {
+        border-radius: 0.75rem !important;
+        margin: 0 !important;
+    }
+    
+    .product-card-wrapper {
+        min-height: 380px;
+        margin-bottom: 1rem;
+    }
+    
+    .product-image {
+        height: 180px !important;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .card-title {
+        font-size: 0.9rem !important;
+        height: 2.4rem !important;
+        line-height: 1.2 !important;
     }
     
     .product-overlay .btn {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
     }
     
     .product-overlay .btn-dark {
         padding: 0.375rem 0.75rem;
+        font-size: 0.8rem !important;
+    }
+    
+    .product-overlay .btn-light {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    .badge {
+        font-size: 0.65rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+    
+    /* Prevent text overflow */
+    .card-title, .text-muted {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Adjust price display */
+    .h6 {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Ensure cards don't break grid */
+    .col-sm-6 .product-card-wrapper {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-card {
+        border-radius: 0.5rem !important;
+    }
+    
+    .product-card-wrapper {
+        min-height: 360px;
+        margin-bottom: 1rem;
+    }
+    
+    .product-image {
+        height: 160px !important;
+    }
+    
+    .card-body {
+        padding: 0.875rem !important;
+    }
+    
+    .card-title {
+        font-size: 0.85rem !important;
+        height: 2.2rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .text-muted.small {
+        font-size: 0.7rem !important;
+        margin-bottom: 0.375rem !important;
+    }
+    
+    .product-overlay .btn-dark {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem !important;
+    }
+    
+    .product-overlay .btn-light {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .badge {
+        font-size: 0.6rem !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+    
+    /* Better spacing for small screens */
+    .product-overlay .d-flex {
+        gap: 0.5rem !important;
+    }
+    
+    /* Mobile grid fixes */
+    .col-12 .product-card-wrapper {
+        width: 100%;
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+    
+    /* Ensure proper Bootstrap grid behavior */
+    .row > .col-12,
+    .row > .col-sm-6,
+    .row > .col-md-4,
+    .row > .col-lg-3 {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+/* Extra small screens - ensure single column */
+@media (max-width: 400px) {
+    .product-card-wrapper {
+        min-height: 340px;
+    }
+    
+    .product-image {
+        height: 150px !important;
+    }
+    
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .card-title {
+        font-size: 0.8rem !important;
+        height: 2rem !important;
     }
 }
 
@@ -199,4 +376,21 @@
 
 .product-card-wrapper a:hover {
     color: inherit;
+}
+
+/* Image Link */
+.product-card .position-relative > a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.product-card:hover .position-relative > a {
+    pointer-events: none;
+}
+
+.product-card:hover .product-overlay {
+    pointer-events: auto;
 }

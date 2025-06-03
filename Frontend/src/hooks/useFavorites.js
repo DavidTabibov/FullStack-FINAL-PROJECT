@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { toggleFavorite as apiToggleFavorite, getFavoriteIds } from '../services/wishlist';
+import { useToast } from '../context/ToastContext';
 
 export const useFavorites = () => {
     const { isAuthenticated } = useAuth();
+    const { showToast } = useToast();
     const [favorites, setFavorites] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -19,7 +21,6 @@ export const useFavorites = () => {
                 const favoriteIds = await getFavoriteIds();
                 setFavorites(favoriteIds);
             } catch (error) {
-                console.error('Error loading favorites:', error);
                 setFavorites([]);
             }
         };
@@ -27,33 +28,30 @@ export const useFavorites = () => {
         loadFavorites();
     }, [isAuthenticated]);
 
-    const toggleFavorite = useCallback(async (productId) => {
-        if (!productId) return;
-        
+    const toggleFavorite = async (productId) => {
         if (!isAuthenticated) {
-            console.log('Please log in to manage favorites');
+            showToast('🔐 Please sign in to manage your favorites collection', 'warning');
             return;
         }
-        
-        setIsLoading(true);
-        try {
-            // Call the API to toggle favorite
-            await apiToggleFavorite(productId);
 
-            // Update local state
+        try {
+            setIsLoading(true);
+            
             if (favorites.includes(productId)) {
+                await apiToggleFavorite(productId);
                 setFavorites(prev => prev.filter(id => id !== productId));
-                console.log('Product removed from favorites');
+                showToast('💔 Item removed from your favorites', 'success');
             } else {
+                await apiToggleFavorite(productId);
                 setFavorites(prev => [...prev, productId]);
-                console.log('Product added to favorites');
+                showToast('❤️ Item added to your favorites collection!', 'success');
             }
         } catch (error) {
-            console.error('Error toggling favorite:', error);
+            showToast('⚠️ Unable to update favorites. Please check your connection and try again.', 'error');
         } finally {
             setIsLoading(false);
         }
-    }, [favorites, isAuthenticated]);
+    };
 
     return {
         favorites,

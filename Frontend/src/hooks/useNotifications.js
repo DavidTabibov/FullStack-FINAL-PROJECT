@@ -2,19 +2,23 @@ import { useState, useCallback } from 'react';
 
 export const useNotifications = () => {
     const showSuccess = (message) => {
-        console.log('Success:', message);
+        // Handle success notification
+        // Add your success notification logic here
     };
 
     const showError = (message) => {
-        console.error('Error:', message);
+        // Handle error notification
+        // Add your error notification logic here
     };
 
     const showInfo = (message) => {
-        console.log('Info:', message);
+        // Handle info notification
+        // Add your info notification logic here
     };
 
     const showWarning = (message) => {
-        console.warn('Warning:', message);
+        // Handle warning notification
+        // Add your warning notification logic here
     };
 
     return {

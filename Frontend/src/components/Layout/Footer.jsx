@@ -11,19 +11,24 @@ const Footer = () => {
     const handleNewsletterSubmit = async (e) => {
         e.preventDefault();
         
-        if (!email) {
-            showToast('Please enter a valid email address', 'warning');
+        if (!email || !email.includes('@')) {
+            showToast('📧 Please enter a valid email address to join our newsletter', 'warning');
             return;
         }
         
         setIsNewsletterLoading(true);
         
-        // Simulate newsletter signup (replace with actual API call later)
-        setTimeout(() => {
-            setIsNewsletterLoading(false);
+        // Simulate newsletter subscription
+        try {
+            // Here you would typically make an API call to subscribe the user
             setEmail('');
-            showToast('Thank you for subscribing to our newsletter!', 'success');
-        }, 1500);
+            showToast('🎉 Welcome to our newsletter! Get ready for exclusive deals and fashion updates.', 'success');
+        } catch (error) {
+            console.error('Error subscribing to newsletter:', error);
+            showToast('❌ There was an error subscribing to our newsletter. Please try again later.', 'error');
+        } finally {
+            setIsNewsletterLoading(false);
+        }
     };
 
     const currentYear = new Date().getFullYear();
@@ -269,7 +274,7 @@ const Footer = () => {
                     <div className="row align-items-center">
                         <div className="col-md-6 text-center text-md-start mb-2 mb-md-0">
                             <p className="mb-0 small text-light opacity-75">
-                                © {currentYear} Luxe Boutique. All rights reserved.
+                                © {currentYear} Luxe Boutique. All rights reserved. Built by David Tabibov
                             </p>
                         </div>
                         <div className="col-md-6 text-center text-md-end">

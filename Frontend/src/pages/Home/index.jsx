@@ -21,36 +21,32 @@ const Home = () => {
     if (products && products.length > 0) {
       // Get featured products (first 8)
       setFeaturedProducts(products.slice(0, 8));
-      console.log('Featured products set:', products.slice(0, 8));
     }
   }, [products]);
 
   // Fetch user's favorite product IDs
   useEffect(() => {
-    const fetchFavorites = async () => {
+    const loadFavorites = async () => {
       if (isAuthenticated) {
         try {
           setFavoritesLoading(true);
           const ids = await getFavoriteIds();
-          setFavoriteIds(ids);
-          console.log('Favorite IDs loaded:', ids);
+          setFavoriteIds(ids || []);
         } catch (error) {
-          console.error('Error fetching favorites:', error);
         } finally {
           setFavoritesLoading(false);
         }
       } else {
         setFavoriteIds([]);
-        console.log('User not authenticated, favoriteIds cleared');
       }
     };
 
-    fetchFavorites();
+    loadFavorites();
   }, [isAuthenticated]);
 
   const handleToggleFavorite = async (productId) => {
     if (!isAuthenticated) {
-      showToast('Please login to add items to wishlist', 'warning');
+      showToast('🔐 Please sign in to create your personal wishlist', 'warning');
       return;
     }
 
@@ -60,14 +56,13 @@ const Home = () => {
       // Update local state
       if (favoriteIds.includes(productId)) {
         setFavoriteIds(prev => prev.filter(id => id !== productId));
-        showToast('Removed from wishlist', 'success');
+        showToast('💔 Item removed from your wishlist', 'success');
       } else {
         setFavoriteIds(prev => [...prev, productId]);
-        showToast('Added to wishlist', 'success');
+        showToast('❤️ Item added to your wishlist!', 'success');
       }
     } catch (error) {
-      showToast('Failed to update wishlist', 'error');
-      console.error('Error toggling favorite:', error);
+      showToast('⚠️ Unable to update wishlist. Please check your connection and try again.', 'error');
     }
   };
 
@@ -194,10 +189,10 @@ const Home = () => {
               <p className="mb-0">{error}</p>
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="row g-3 mb-4">
+            <div className="row g-3 g-md-4 mb-4">
               {featuredProducts.map((product) => (
-                <div key={product._id} className="col-lg-3 col-md-6">
-                  <div className="card border-0 h-100 shadow-sm card-hover overflow-hidden">
+                <div key={product._id} className="col-12 col-sm-6 col-md-6 col-lg-3 d-flex">
+                  <div className="card border-0 h-100 shadow-sm card-hover overflow-hidden d-flex flex-column">
                     {/* Product Image */}
                     <div className="position-relative overflow-hidden" style={{ height: '180px' }}>
                       <img 
@@ -255,26 +250,37 @@ const Home = () => {
                     </div>
 
                     {/* Card Body */}
-                    <div className="card-body p-3">
-                      {/* Product Title */}
-                      <h5 className="card-title fw-bold mb-2 text-truncate">{product.name}</h5>
+                    <div className="card-body p-3 d-flex flex-column flex-grow-1">
+                      {/* Product Title - Fixed height */}
+                      <h5 className="card-title fw-bold mb-2" style={{ 
+                        height: '2.6rem',
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        lineHeight: '1.3'
+                      }}>{product.name}</h5>
                       
-                      {/* Product Description */}
-                      {product.description && (
-                        <p 
-                          className="card-text text-muted mb-2 small" 
-                          style={{ 
-                            display: '-webkit-box', 
-                            WebkitLineClamp: 2, 
-                            WebkitBoxOrient: 'vertical', 
-                            overflow: 'hidden' 
-                          }}
-                        >
-                          {product.description}
-                        </p>
-                      )}
+                      {/* Product Description - Fixed height */}
+                      <div className="mb-2" style={{ height: '3rem' }}>
+                        {product.description && (
+                          <p 
+                            className="card-text text-muted small" 
+                            style={{ 
+                              display: '-webkit-box', 
+                              WebkitLineClamp: 2, 
+                              WebkitBoxOrient: 'vertical', 
+                              overflow: 'hidden',
+                              fontSize: '0.85rem',
+                              lineHeight: '1.4'
+                            }}
+                          >
+                            {product.description}
+                          </p>
+                        )}
+                      </div>
 
-                      {/* Price and Button */}
+                      {/* Price and Button - Push to bottom */}
                       <div className="d-flex justify-content-between align-items-center mt-auto">
                         <span className="h5 fw-bold text-primary mb-0">
                           ${product.price ? product.price.toFixed(2) : '0.00'}
@@ -286,7 +292,7 @@ const Home = () => {
                             onClick={(e) => {
                               e.preventDefault();
                               addToCart(product);
-                              showToast('Product added to cart!');
+                              showToast(`🛒 "${product.name}" added to your cart!`, 'success');
                               
                               // Button feedback
                               const btn = e.target;

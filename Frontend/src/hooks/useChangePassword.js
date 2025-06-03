@@ -1,31 +1,33 @@
 import { useState } from 'react';
 import api from '../services/api';
+import { useToast } from '../context/ToastContext';
 
-export function useChangePassword() {
+const useChangePassword = () => {
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const { showToast } = useToast();
 
-    const changePassword = async ({ currentPassword, newPassword }) => {
+    const changePassword = async (currentPassword, newPassword) => {
         setLoading(true);
-        setError(null);
-
         try {
-            await api.post('/users/change-password', {
+            const response = await api.put('/auth/change-password', {
                 currentPassword,
                 newPassword
             });
-
-            console.log('Password updated successfully');
-            return true;
-        } catch (err) {
-            const message = err.response?.data?.message || 'Error updating password';
-            setError(message);
-            console.error('Password update error:', message);
-            return false;
+            
+            if (response.data) {
+                showToast('Password updated successfully', 'success');
+                return response.data;
+            }
+        } catch (error) {
+            const message = error.response?.data?.message || 'Failed to update password';
+            showToast(message, 'error');
+            throw error;
         } finally {
             setLoading(false);
         }
     };
 
-    return { changePassword, loading, error };
-}
+    return { changePassword, loading };
+};
+
+export default useChangePassword;

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
+import useChangePassword from '../../hooks/useChangePassword';
+import { useToast } from '../../context/ToastContext';
 
 const ProfilePage = () => {
     const { user, loading: authLoading } = useAuth();
     const { updateProfile, loading: profileLoading, error: profileError } = useProfile();
+    const { changePassword } = useChangePassword();
+    const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
         firstName: '',
@@ -18,6 +22,7 @@ const ProfilePage = () => {
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const loading = authLoading || profileLoading;
 
@@ -59,30 +64,30 @@ const ProfilePage = () => {
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccess('');
-
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setError('New passwords do not match');
+            showToast('🔒 Password confirmation does not match. Please ensure both passwords are identical.', 'error');
             return;
         }
-
+        
         if (passwordData.newPassword.length < 6) {
-            setError('Password must be at least 6 characters long');
+            showToast('🔐 Password must be at least 6 characters long for security', 'error');
             return;
         }
-
+        
+        setIsChangingPassword(true);
+        
         try {
-            // This would typically call a password change API
-            console.log('Password change requested');
-            setSuccess('Password updated successfully!');
+            await changePassword(passwordData.currentPassword, passwordData.newPassword);
+            showToast('🔑 Password updated successfully! Your account is now more secure.', 'success');
             setPasswordData({
                 currentPassword: '',
                 newPassword: '',
                 confirmPassword: ''
             });
-        } catch (err) {
-            setError(err.message || 'Failed to update password');
+        } catch (error) {
+            showToast(`❌ ${error.message || 'Failed to change password. Please verify your current password and try again.'}`, 'error');
+        } finally {
+            setIsChangingPassword(false);
         }
     };
 
@@ -277,10 +282,10 @@ const ProfilePage = () => {
                                                         <div className="d-flex justify-content-end">
                                                             <button
                                                                 type="submit"
-                                                                disabled={loading}
+                                                                disabled={loading || isChangingPassword}
                                                                 className="btn btn-primary"
                                                             >
-                                                                {loading ? 'Updating...' : 'Update Password'}
+                                                                {loading ? 'Updating...' : isChangingPassword ? 'Updating...' : 'Update Password'}
                                                             </button>
                                                         </div>
                                                     </div>

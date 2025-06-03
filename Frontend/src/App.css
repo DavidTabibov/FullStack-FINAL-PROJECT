@@ -1,0 +1,265 @@
+/* Global Responsive Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.container-fluid,
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Bootstrap Grid Fixes */
+.row {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: calc(var(--bs-gutter-y) * -1);
+  margin-right: calc(var(--bs-gutter-x) * -.5);
+  margin-left: calc(var(--bs-gutter-x) * -.5);
+}
+
+.row > * {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  padding-right: calc(var(--bs-gutter-x) * .5);
+  padding-left: calc(var(--bs-gutter-x) * .5);
+  margin-top: var(--bs-gutter-y);
+}
+
+/* Grid System - Mobile First */
+.col-12 {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .col-sm-6 {
+    flex: 0 0 auto;
+    width: 50%;
+  }
+}
+
+@media (min-width: 768px) {
+  .col-md-4 {
+    flex: 0 0 auto;
+    width: 33.333333%;
+  }
+  
+  .col-md-6 {
+    flex: 0 0 auto;
+    width: 50%;
+  }
+}
+
+@media (min-width: 992px) {
+  .col-lg-3 {
+    flex: 0 0 auto;
+    width: 25%;
+  }
+}
+
+/* Gap System */
+.g-3 {
+  --bs-gutter-x: 1rem;
+  --bs-gutter-y: 1rem;
+}
+
+.g-md-4 {
+  --bs-gutter-x: 1rem;
+  --bs-gutter-y: 1rem;
+}
+
+@media (min-width: 768px) {
+  .g-md-4 {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+  }
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  /* Prevent text overflow */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  /* Image constraints */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Button responsive sizing */
+  .btn {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+  
+  /* Card responsive adjustments */
+  .card {
+    margin-bottom: 1rem;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Navigation responsive */
+  .navbar-nav {
+    padding-top: 1rem;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Grid responsive fixes */
+  .row > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .row > [class*="col-"] > * {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  /* Smaller text on very small screens */
+  .display-1 { font-size: 2.5rem !important; }
+  .display-2 { font-size: 2rem !important; }
+  .display-3 { font-size: 1.75rem !important; } 
+  .display-4 { font-size: 1.5rem !important; }
+  
+  /* Compact buttons */
+  .btn-lg {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Force single column on very small screens */
+  .row > [class*="col-"] {
+    flex: 0 0 auto;
+    width: 100% !important;
+  }
+  
+  /* Smaller gaps */
+  .g-3, .g-md-4 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
+  }
+} 
+
+/* Flex utilities */
+.d-flex {
+  display: flex !important;
+}
+
+.flex-column {
+  flex-direction: column !important;
+}
+
+.h-100 {
+  height: 100% !important;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+/* Cart Page Responsive Styles */
+.cart-item {
+  transition: background-color 0.2s ease;
+}
+
+.cart-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 768px) {
+  /* Cart mobile adjustments */
+  .cart-item {
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .cart-item .badge {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+    display: inline-block;
+    margin-bottom: 0.25rem;
+  }
+  
+  .cart-item h3 {
+    font-size: 0.9rem !important;
+    line-height: 1.3;
+  }
+  
+  /* Order summary mobile */
+  .order-summary-mobile {
+    position: relative !important;
+    top: auto !important;
+  }
+  
+  /* Sticky behavior for mobile */
+  .position-sticky {
+    position: relative !important;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Very small screens */
+  .cart-item {
+    padding: 0.75rem !important;
+  }
+  
+  .cart-item img {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .cart-item .btn-sm {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .cart-item .badge {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+}
+
+/* Order Summary Enhancements */
+.order-summary {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.order-summary .card-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  color: white !important;
+  border-bottom: none !important;
+}
+
+.order-summary .card-header h2 {
+  color: white !important;
+} 

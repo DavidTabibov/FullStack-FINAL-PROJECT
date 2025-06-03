@@ -45,21 +45,12 @@ const AdminProductsManagement = () => {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    console.log('FormData changed:', {
-      isFeatured: formData.isFeatured,
-      isNew: formData.isNew,
-      isSale: formData.isSale
-    });
-  }, [formData.isFeatured, formData.isNew, formData.isSale]);
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/products?limit=1000');
       setProducts(response.data.products || response.data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
       setError('Error loading products');
     } finally {
       setLoading(false);
@@ -67,19 +58,15 @@ const AdminProductsManagement = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, type, checked, value } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
     
-    console.log('handleInputChange:', { name, type, checked, value, newValue });
+    const updated = {
+      ...formData,
+      [name]: newValue
+    };
     
-    setFormData(prev => {
-      const updated = {
-        ...prev,
-        [name]: newValue
-      };
-      console.log('Updated formData:', updated);
-      return updated;
-    });
+    setFormData(updated);
   };
 
   const handleImageChange = (index, value) => {
@@ -210,22 +197,21 @@ const AdminProductsManagement = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setShowEditModal(false);
-        showToast('Product updated successfully');
+        showToast('✅ Product updated successfully! Changes have been saved.', 'success');
       } else {
         // Create new product
         await axios.post('/api/products', productData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setShowAddModal(false);
-        showToast('Product created successfully');
+        showToast('🎉 New product created successfully! It\'s now available in your store.', 'success');
       }
       
       fetchProducts();
       resetForm();
       setSelectedProduct(null);
     } catch (error) {
-      console.error('Error saving product:', error);
-      showToast('Error saving product', 'error');
+      showToast('❌ Unable to save product. Please check all fields and try again.', 'error');
     }
   };
 
@@ -238,10 +224,9 @@ const AdminProductsManagement = () => {
       
       setShowDeleteModal(false);
       fetchProducts();
-      showToast('Product deleted successfully');
+      showToast(`🗑️ "${selectedProduct.name}" has been permanently deleted from your store.`, 'success');
     } catch (error) {
-      console.error('Error deleting product:', error);
-      showToast('Error deleting product', 'error');
+      showToast('❌ Unable to delete product. Please try again or contact support.', 'error');
     }
   };
 
@@ -685,24 +670,11 @@ const AdminProductsManagement = () => {
                           type="checkbox"
                           id="isFeatured"
                           checked={Boolean(formData.isFeatured)}
-                          onChange={(e) => {
-                            console.log('Featured checkbox clicked:', e.target.checked);
-                            setFormData(prev => {
-                              const updated = { ...prev, isFeatured: e.target.checked };
-                              console.log('Updated formData with Featured:', updated);
-                              return updated;
-                            });
-                          }}
+                          onChange={handleInputChange}
                         />
                         <label 
                           className="form-check-label" 
                           htmlFor="isFeatured"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newValue = !formData.isFeatured;
-                            console.log('Featured label clicked, setting to:', newValue);
-                            setFormData(prev => ({ ...prev, isFeatured: newValue }));
-                          }}
                         >
                           Featured Product
                         </label>
@@ -715,24 +687,11 @@ const AdminProductsManagement = () => {
                           type="checkbox"
                           id="isNew"
                           checked={Boolean(formData.isNew)}
-                          onChange={(e) => {
-                            console.log('New checkbox clicked:', e.target.checked);
-                            setFormData(prev => {
-                              const updated = { ...prev, isNew: e.target.checked };
-                              console.log('Updated formData with New:', updated);
-                              return updated;
-                            });
-                          }}
+                          onChange={handleInputChange}
                         />
                         <label 
                           className="form-check-label" 
                           htmlFor="isNew"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newValue = !formData.isNew;
-                            console.log('New label clicked, setting to:', newValue);
-                            setFormData(prev => ({ ...prev, isNew: newValue }));
-                          }}
                         >
                           New Product
                         </label>
@@ -745,24 +704,11 @@ const AdminProductsManagement = () => {
                           type="checkbox"
                           id="isSale"
                           checked={Boolean(formData.isSale)}
-                          onChange={(e) => {
-                            console.log('Sale checkbox clicked:', e.target.checked);
-                            setFormData(prev => {
-                              const updated = { ...prev, isSale: e.target.checked };
-                              console.log('Updated formData with Sale:', updated);
-                              return updated;
-                            });
-                          }}
+                          onChange={handleInputChange}
                         />
                         <label 
                           className="form-check-label" 
                           htmlFor="isSale"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newValue = !formData.isSale;
-                            console.log('Sale label clicked, setting to:', newValue);
-                            setFormData(prev => ({ ...prev, isSale: newValue }));
-                          }}
                         >
                           On Sale
                         </label>

@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-// import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
 
 const Header = () => {
   const [isNavCollapsed, setIsNavCollapsed] = useState(true);
   const { user, logout, isAdmin } = useAuth();
-  // const { showToast } = useToast();
+  const { showToast } = useToast();
   const { itemCount } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,13 +23,16 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      // showToast('Logged out successfully', 'success');
-      console.log('Logged out successfully');
+      // Clear user data, localStorage, etc.
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('cart'); // Clear cart on logout
+      
+      showToast('👋 Successfully logged out! Thank you for visiting Luxe Boutique.', 'success');
       navigate('/');
       closeNav();
     } catch (error) {
-      // showToast('Error logging out', 'error');
-      console.error('Error logging out', error);
+      showToast('⚠️ Error logging out. Please try refreshing the page.', 'error');
     }
   };
 
@@ -148,6 +151,31 @@ const Header = () => {
                 >
                   <i className="bi bi-telephone me-2"></i>
                   Contact
+                </Link>
+              </li>
+              {/* Mobile Cart - Only visible on small screens */}
+              <li className="nav-item d-lg-none">
+                <Link
+                  className={`nav-link fw-medium px-3 py-2 rounded-pill d-flex align-items-center justify-content-between ${
+                    isActive('/cart') ? 'bg-primary text-white' : 'text-dark hover-bg-primary'
+                  }`}
+                  to="/cart"
+                  onClick={closeNav}
+                  style={{ 
+                    transition: '0.3s',
+                    backgroundColor: isActive('/cart') ? '#312e81' : 'transparent',
+                    color: isActive('/cart') ? '#ffffff' : '#1f2937'
+                  }}
+                >
+                  <span className="d-flex align-items-center">
+                    <i className="bi bi-bag me-2"></i>
+                    Shopping Cart
+                  </span>
+                  {itemCount > 0 && (
+                    <span className="badge bg-warning text-dark rounded-pill" style={{ fontSize: '0.7rem' }}>
+                      {itemCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             </ul>
