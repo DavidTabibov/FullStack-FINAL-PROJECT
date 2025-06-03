@@ -111,26 +111,6 @@ const PaymentMethods = () => {
               </div>
 
               <div className="mb-4">
-                <h4 className="h5 fw-bold text-dark mb-3">Gift Cards & Store Credit</h4>
-                <div className="bg-light rounded p-4">
-                  <div className="row align-items-center">
-                    <div className="col-md-8">
-                      <h6 className="fw-bold mb-2">Luxe Boutique Gift Cards</h6>
-                      <p className="text-muted mb-0">
-                        Perfect for any occasion. Available in amounts from $25 to $500. 
-                        Never expire and can be used online or in-store.
-                      </p>
-                    </div>
-                    <div className="col-md-4 text-md-end mt-3 mt-md-0">
-                      <a href="/gift-cards" className="btn btn-primary">
-                        Buy Gift Cards
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4">
                 <h4 className="h5 fw-bold text-dark mb-3">Billing Information</h4>
                 <ul className="list-unstyled">
                   <li className="mb-2">
